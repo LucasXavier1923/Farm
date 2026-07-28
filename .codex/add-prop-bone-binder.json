@@ -1,0 +1,4 @@
+{
+  "gameObjectRef": { "path": "Player" },
+  "componentNames": [ "Synty.Tools.SyntyPropBoneTool.PropBoneBinder" ]
+}

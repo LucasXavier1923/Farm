@@ -1,0 +1,7 @@
+{
+  "csharpCode":"var plot=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var player=UnityEngine.GameObject.Find(\"Player\"); var movement=player!=null?player.GetComponent<FarmPrototype.Player.FarmPlayerController>():null; var tiles=UnityEngine.Object.FindObjectsByType<FarmPrototype.Farming.FarmTestTile>(); System.Array.Sort(tiles,(a,b)=>a.Index.CompareTo(b.Index)); if(plot==null||plot.GameState==null||movement==null||!movement.enabled||tiles.Length!=9) throw new System.Exception(\"Sanidade v9 incompleta\"); var state=plot.GameState; if(state.Money!=100||state.PumpkinSeeds!=12||state.HoeLevel!=1||state.WateringCanLevel!=1||state.HarvestLevel!=1||state.DayNumber!=1) throw new System.Exception(\"Save limpo v9 não foi restaurado\"); var snapshot=state.CreateSaveData(new System.Collections.Generic.List<FarmPrototype.Farming.FarmTileSaveData>()); if(snapshot.Version!=9||snapshot.HoeLevel!=1||snapshot.WateringCanLevel!=1||snapshot.HarvestLevel!=1) throw new System.Exception(\"Snapshot final v9 incorreto\"); plot.SelectHotbarSlot(0); if(plot.GetAffectedTiles(tiles[4],FarmPrototype.Farming.FarmTool.Hoe).Count!=1) throw new System.Exception(\"Ferramenta inicial deveria afetar 1 canteiro\"); UnityEngine.Debug.Log(\"[FINAL_SANITY_V9_OK] save limpo | movimento | L1 | 9 canteiros | snapshot\");",
+  "className":"FinalSanityV9",
+  "methodName":"Run",
+  "parameters":[],
+  "isMethodBody":true
+}

@@ -1,0 +1,795 @@
+{
+  "LanguageCode": "en",
+  "Entries": [
+    { "Key": "item.pumpkin_seed.name", "Value": "Pumpkin Seeds" },
+    { "Key": "item.wildflower.name", "Value": "Wildflower" },
+    { "Key": "item.forest_mushroom.name", "Value": "Forest Mushroom" },
+    { "Key": "item.wildflower_tea.name", "Value": "Wildflower Tea" },
+    { "Key": "item.mushroom_stew.name", "Value": "Mushroom Stew" },
+    { "Key": "tooltip.category.meal", "Value": "MEAL" },
+    { "Key": "tooltip.use.meal", "Value": "Select in the hotbar and press R to restore Energy." },
+    { "Key": "meal.command.invalid", "Value": "Invalid meal request." },
+    { "Key": "meal.energy_full", "Value": "Energy is already full. Save the meal for later." },
+    { "Key": "meal.missing", "Value": "That meal is no longer in the inventory." },
+    { "Key": "meal.consumed", "Value": "Enjoyed {0}: restored {1} Energy." },
+    { "Key": "gift.hint", "Value": "COMMUNITY GIFTS  -  one artisan favorite gift per neighbor each day" },
+    { "Key": "gift.button", "Value": "{0}\n{1}  +3 Favor" },
+    { "Key": "gift.button_sent", "Value": "{0}\nSENT TODAY" },
+    { "Key": "gift.invalid", "Value": "That is not a suitable gift for this neighbor." },
+    { "Key": "gift.already_today", "Value": "This neighbor has already received a gift today." },
+    { "Key": "gift.missing", "Value": "That gift is no longer in the inventory." },
+    { "Key": "gift.sent", "Value": "Gift delivered to {0}: +{1} Favor." },
+    { "Key": "gift.sent_milestone", "Value": "Gift delivered to {0}: +{1} Favor. Community bond {2} reached: +${3}." },
+    { "Key": "festival.prompt", "Value": "Harvest Share: {0}/{1} crops. Select a crop and press V to contribute." },
+    { "Key": "festival.complete_prompt", "Value": "Harvest Share complete! The valley thanks your farm." },
+    { "Key": "festival.inactive", "Value": "There is no active festival contribution today." },
+    { "Key": "festival.crop_required", "Value": "Select a harvested crop to contribute." },
+    { "Key": "festival.already_complete", "Value": "This festival target is already complete." },
+    { "Key": "festival.missing", "Value": "That crop is no longer in the inventory." },
+    { "Key": "festival.contributed", "Value": "Festival contribution accepted: {0}/{1}." },
+    { "Key": "festival.completed", "Value": "Harvest Share complete! +${0} and +1 Favor with every neighbor." },
+    { "Key": "project.prompt", "Value": "Market Route: Wood {0}/{1}  Stone {2}/{3}  Refined {4}/{5}. Select a material and press B." },
+    { "Key": "project.complete_prompt", "Value": "Market Route active: daily orders may use shared storage." },
+    { "Key": "project.completed", "Value": "Market Route complete! Daily orders can now use shared storage." },
+    { "Key": "project.contributed", "Value": "Project material delivered." },
+    { "Key": "project.already_complete", "Value": "Market Route is already complete." },
+    { "Key": "project.material_required", "Value": "Select Wood, Stone, or Refined Stone from the inventory." },
+    { "Key": "project.material_full", "Value": "That material target is already full." },
+    { "Key": "animals.treated", "Value": "Chickens enjoyed a treat today." },
+    { "Key": "animals.treat.prompt", "Value": "Treat bowl: press F to offer a Wildflower ({0} in inventory)." },
+    { "Key": "animals.treat_missing", "Value": "You need a Wildflower for a chicken treat." },
+    { "Key": "animals.treat_success", "Value": "Chickens loved the Wildflower. Today's egg quality improved." },
+    { "Key": "animals.flock", "Value": " Pip and Clover are waiting nearby." },
+    { "Key": "community.contact.elara", "Value": "Elara" },
+    { "Key": "community.contact.bram", "Value": "Bram" },
+    { "Key": "community.contact.niko", "Value": "Niko" },
+    { "Key": "orders.community.next", "Value": "Requested by {0}  |  {1} Favor  |  {2} to next bond" },
+    { "Key": "orders.community.max", "Value": "Requested by {0}  |  {1} Favor  |  Bond complete" },
+    { "Key": "orders.completed_community", "Value": "Order delivered: +${0}; +{1} Favor with {2}." },
+    { "Key": "orders.completed_community_milestone", "Value": "Order delivered: +${0}; +{1} Favor with {2}. Community bond {3} reached: +${4}." },
+    { "Key": "item.pumpkin.name", "Value": "Pumpkin" },
+    { "Key": "item.strawberry_seed.name", "Value": "Strawberry Seeds" },
+    { "Key": "item.strawberry.name", "Value": "Strawberry" },
+    { "Key": "item.corn_seed.name", "Value": "Corn Seeds" },
+    { "Key": "item.corn.name", "Value": "Corn" },
+    { "Key": "item.carrot_seed.name", "Value": "Carrot Seeds" },
+    { "Key": "item.carrot.name", "Value": "Carrot" },
+    { "Key": "item.wood.name", "Value": "Wood" },
+    { "Key": "item.stone.name", "Value": "Stone" },
+    { "Key": "item.scarecrow_kit.name", "Value": "Scarecrow Kit" },
+    { "Key": "item.sprinkler_kit.name", "Value": "Sprinkler Kit" },
+    { "Key": "item.fence_kit.name", "Value": "Fence Kit" },
+    { "Key": "crop.pumpkin.name", "Value": "Pumpkin" },
+    { "Key": "crop.strawberry.name", "Value": "Strawberry" },
+    { "Key": "crop.corn.name", "Value": "Corn" },
+    { "Key": "crop.carrot.name", "Value": "Carrot" },
+    { "Key": "recipe.scarecrow.name", "Value": "Scarecrow Kit" },
+    { "Key": "recipe.scarecrow.description", "Value": "Protects a small growing area." },
+    { "Key": "recipe.sprinkler.name", "Value": "Sprinkler Kit" },
+    { "Key": "recipe.sprinkler.description", "Value": "Builds a tool that automates crop watering." },
+    { "Key": "recipe.fence_bundle.name", "Value": "Fence Bundle" },
+    { "Key": "recipe.fence_bundle.description", "Value": "Crafts two fence segments to shape your farm." },
+    { "Key": "buildable.scarecrow.name", "Value": "Scarecrow" },
+    { "Key": "buildable.scarecrow.description", "Value": "Protects nearby crops from crow visits." },
+    { "Key": "buildable.sprinkler.name", "Value": "Sprinkler" },
+    { "Key": "buildable.sprinkler.description", "Value": "Waters crops automatically at 06:00." },
+    { "Key": "buildable.fence.name", "Value": "Fence Segment" },
+    { "Key": "buildable.fence.description", "Value": "Shapes the farm with continuous snapping and 90-degree corners." },
+    { "Key": "season.spring", "Value": "Spring" },
+    { "Key": "season.summer", "Value": "Summer" },
+    { "Key": "season.autumn", "Value": "Autumn" },
+    { "Key": "season.winter", "Value": "Winter" },
+    { "Key": "crop.affinity", "Value": "Affinity: {0} • +{1} harvest yield" },
+    { "Key": "clock.calendar", "Value": "YEAR {0}  •  {1}" },
+    { "Key": "clock.display", "Value": "DAY {0}   {1}   {2}" },
+    { "Key": "phase.night", "Value": "Night" },
+    { "Key": "phase.dawn", "Value": "Dawn" },
+    { "Key": "phase.morning", "Value": "Morning" },
+    { "Key": "phase.afternoon", "Value": "Afternoon" },
+    { "Key": "phase.dusk", "Value": "Dusk" },
+    { "Key": "weather.display", "Value": "{0}   •   Tomorrow: {1}" },
+    { "Key": "weather.clear", "Value": "Sunny" },
+    { "Key": "weather.cloudy", "Value": "Cloudy" },
+    { "Key": "weather.rain", "Value": "Rain" },
+    { "Key": "weather.stable", "Value": "Stable weather" },
+    { "Key": "quality.normal", "Value": "Normal" },
+    { "Key": "quality.silver", "Value": "Silver" },
+    { "Key": "quality.gold", "Value": "Gold" },
+    { "Key": "backend.prepare.invalid", "Value": "Invalid soil preparation request." },
+    { "Key": "backend.tile.unknown", "Value": "Unknown plot tile." },
+    { "Key": "backend.tile.already_prepared", "Value": "This plot tile is already prepared." },
+    { "Key": "backend.soil.prepared", "Value": "Soil prepared." },
+    { "Key": "backend.plant.invalid", "Value": "Invalid planting request." },
+    { "Key": "backend.plant.requires_prepared", "Value": "Plant only in prepared soil." },
+    { "Key": "backend.plant.seed_missing", "Value": "You do not have that seed." },
+    { "Key": "backend.plant.confirmed", "Value": "Seed confirmed by server." },
+    { "Key": "backend.hotbar.invalid", "Value": "Invalid hotbar request." },
+    { "Key": "backend.hotbar.slot_invalid", "Value": "Invalid hotbar slot." },
+    { "Key": "backend.hotbar.item_missing", "Value": "That item is not in the inventory." },
+    { "Key": "backend.hotbar.confirmed", "Value": "Hotbar shortcut confirmed by server." },
+    { "Key": "backend.command.missing_id", "Value": "Command has no identifier." },
+    { "Key": "backend.uninitialized", "Value": "Backend has not been initialized." },
+    { "Key": "backend.waiting", "Value": "Waiting for server confirmation." },
+    { "Key": "backend.no_response", "Value": "The backend did not respond." },
+    { "Key": "commerce.request.invalid", "Value": "Invalid commerce request." },
+    { "Key": "commerce.unavailable", "Value": "Commerce unavailable: session is not initialized." },
+    { "Key": "commerce.busy", "Value": "Commerce is already being processed." },
+    { "Key": "commerce.action.unknown", "Value": "Unknown commerce action." },
+    { "Key": "commerce.seed.unknown", "Value": "Selected seed does not exist." },
+    { "Key": "commerce.buy.unavailable", "Value": "Purchase unavailable. Cost: ${0}; check funds and space." },
+    { "Key": "commerce.buy.success", "Value": "Bought {0} {1} for ${2}." },
+    { "Key": "commerce.sell.none", "Value": "There are no harvested products in the inventory to sell." },
+    { "Key": "commerce.sell.success", "Value": "Sold {0} product(s) for ${1} at today's prices." },
+    { "Key": "sleep.all_ready", "Value": "Everyone is ready. The farm will wake up." },
+    { "Key": "sleep.ready_count", "Value": "{0}/{1} player(s) ready to sleep." },
+    { "Key": "tutorial.till", "Value": "Prepare a plot tile with the hoe." },
+    { "Key": "tutorial.plant", "Value": "Plant a seed in the plot tile." },
+    { "Key": "tutorial.water", "Value": "Water the planted seed." },
+    { "Key": "tutorial.harvest", "Value": "Wait for the crop to grow, then harvest it." },
+    { "Key": "tutorial.sell", "Value": "Sell your harvest at the market crate." },
+    { "Key": "tutorial.buy", "Value": "Buy a seed pack." },
+    { "Key": "tutorial.complete", "Value": "First harvest complete!" },
+    { "Key": "feedback.core_loop", "Value": "Prepare the soil, plant, water, and harvest." },
+    { "Key": "feedback.backend.connected", "Value": "Test backend connected. Soil, planting, watering, harvesting, and hotbar actions await confirmation." },
+    { "Key": "session.role.solo", "Value": "SOLO" },
+    { "Key": "session.role.host", "Value": "HOST" },
+    { "Key": "session.role.peer", "Value": "PEER" },
+    { "Key": "session.snapshot.applied", "Value": "Host world update applied." },
+    { "Key": "sleep.unavailable", "Value": "Sleep session unavailable." },
+    { "Key": "tool.tired_suffix", "Value": " (tired)" },
+    { "Key": "orders.completed", "Value": "Order delivered: +${0}." },
+    { "Key": "orders.completed_bonus", "Value": "Order delivered: +${0} (includes full-board bonus of ${1})." },
+    { "Key": "sleep.confirm_prompt", "Value": "{0} Confirm your readiness." },
+    { "Key": "sleep.confirm_end_day", "Value": "Confirm to end the day." },
+    { "Key": "morning.crops_advanced", "Value": "Good morning! {0} crop(s) advanced overnight." },
+    { "Key": "morning.new_day", "Value": "Good morning! A new day has begun on the farm." },
+    { "Key": "morning.sprinklers_suffix", "Value": " Sprinklers watered {0} plot tile(s)." },
+    { "Key": "morning.scarecrows_suffix", "Value": " Scarecrows protected {0} crop(s)." },
+    { "Key": "morning.crows_suffix", "Value": " Crows delayed one crop by 2 seconds." },
+    { "Key": "interaction.tile.too_far", "Value": "Move closer to the plot tile." },
+    { "Key": "tutorial.complete_bonus", "Value": " First harvest complete: +$50 bonus!" },
+    { "Key": "tile.status.untilled", "Value": "unprepared soil" },
+    { "Key": "tile.status.tilled", "Value": "prepared soil — plant" },
+    { "Key": "tile.status.seeded", "Value": "seed planted — water" },
+    { "Key": "tile.status.watered", "Value": "watered — {0:0}s" },
+    { "Key": "tile.status.growing", "Value": "growing — {0:0}s" },
+    { "Key": "tile.status.ready", "Value": "{0} ready — harvest" },
+    { "Key": "tile.status.crop", "Value": "crop" },
+    { "Key": "tile.status.default", "Value": "plot tile" },
+    { "Key": "interaction.mailbox.too_far", "Value": "Move closer to the mailbox." },
+    { "Key": "interaction.mailbox.opened", "Value": "Mailbox opened." },
+    { "Key": "interaction.market.too_far", "Value": "Move closer to the market crate." },
+    { "Key": "interaction.market.opened", "Value": "Market opened." },
+    { "Key": "upgrade.select_tool", "Value": "Select the hoe, watering can, or harvest tool." },
+    { "Key": "land.maxed", "Value": "All available land has already been purchased." },
+    { "Key": "interaction.storage.too_far", "Value": "Move closer to the storage chest." },
+    { "Key": "interaction.storage.opened", "Value": "Storage opened." },
+    { "Key": "interaction.orders.too_far", "Value": "Move closer to the order board." },
+    { "Key": "interaction.orders.opened", "Value": "Daily orders opened." },
+    { "Key": "orders.invalid", "Value": "Invalid order." },
+    { "Key": "interaction.bed.too_far", "Value": "Move closer to the bed." },
+    { "Key": "sleep.too_far", "Value": "Unable to set sleep readiness while away from the bed." },
+    { "Key": "sleep.cancelled", "Value": "Sleep readiness cancelled." },
+    { "Key": "hotbar.empty", "Value": "Empty hotbar slot. Open the inventory with I and drag an item here." },
+    { "Key": "hotbar.item_selected", "Value": "Item selected." },
+    { "Key": "player.missing", "Value": "Player not found." },
+    { "Key": "tile.soil.prepared", "Value": "Soil prepared. Select seeds (2)." },
+    { "Key": "tile.plant.select_seed", "Value": "Select a valid seed in the hotbar." },
+    { "Key": "tile.plant.seed_missing", "Value": "You do not have {0}." },
+    { "Key": "tile.plant.confirmed", "Value": "One seed was used. Water it now (3)." },
+    { "Key": "tile.watered", "Value": "Watered! Ready in {0:0} seconds." },
+    { "Key": "tile.harvest.inventory_full", "Value": "Inventory full. Make room before harvesting." },
+    { "Key": "tile.harvest.affinity", "Value": "Harvested {0} {1}, including +{2} from {3} affinity." },
+    { "Key": "tile.harvest.success", "Value": "Harvested {0} {1}." },
+    { "Key": "tile.harvest.quality", "Value": " Quality: {0}." },
+    { "Key": "tile.harvest.storage", "Value": " Support basket: harvest sent to storage." },
+    { "Key": "tile.harvest.replanted", "Value": " Continuous cycle: one seed was replanted." },
+    { "Key": "tile.invalid.hoe", "Value": "This plot tile is already prepared." },
+    { "Key": "tile.invalid.seeds", "Value": "Seeds can only be used in prepared soil." },
+    { "Key": "tile.invalid.water", "Value": "Plant a seed before watering." },
+    { "Key": "tile.invalid.harvest", "Value": "The crop is not ready yet." },
+    { "Key": "tile.invalid.action", "Value": "Action unavailable." },
+    { "Key": "orders.unavailable", "Value": "Order unavailable" },
+    { "Key": "orders.unavailable_short", "Value": "UNAVAILABLE" },
+    { "Key": "orders.card", "Value": "{0}\nYou have: {1}/{2}\nReward: ${3}" },
+    { "Key": "orders.delivered", "Value": "DELIVERED" },
+    { "Key": "orders.deliver", "Value": "DELIVER" },
+    { "Key": "orders.remaining", "Value": "NEED {0}" },
+    { "Key": "orders.summary", "Value": "DAY {0}  •  {1}/{2} delivered  •  Complete all 3: +${3}" },
+    { "Key": "orders.tomorrow", "Value": "\nTomorrow: {0}" },
+    { "Key": "hotbar.empty_short", "Value": "EMPTY" },
+    { "Key": "hotbar.hoe", "Value": "HOE L{0}" },
+    { "Key": "hotbar.watering_can", "Value": "WATER L{0}" },
+    { "Key": "hotbar.harvest", "Value": "HARVEST L{0}" },
+    { "Key": "tutorial.hud.empty", "Value": "0/6  Prepare a plot tile with the hoe." },
+    { "Key": "tutorial.hud.complete", "Value": "6/6  Complete! $50 bonus received. The farm is yours now." },
+    { "Key": "tutorial.hud.next", "Value": "{0}/6  Next: {1}" },
+    { "Key": "week.title", "Value": "FIRST FARM WEEK" },
+    { "Key": "week.hud.unavailable", "Value": "Farm-week progress is unavailable." },
+    { "Key": "week.hud.current", "Value": "FARM WEEK  •  DAY {0}/{1}  •  {2}\n{3}/{4}  •  {5}" },
+    { "Key": "week.hud.complete", "Value": "FARM WEEK COMPLETE  •  Your farm is ready for its next chapter." },
+    { "Key": "week.step.first_harvest.title", "Value": "FIRST HARVEST" },
+    { "Key": "week.step.first_harvest.description", "Value": "Learn the basic farming tools." },
+    { "Key": "week.step.first_order.title", "Value": "VILLAGE FAVOR" },
+    { "Key": "week.step.first_order.description", "Value": "Deliver a completed request at the village order board." },
+    { "Key": "week.step.crop_variety.title", "Value": "CROP VARIETY" },
+    { "Key": "week.step.crop_variety.description", "Value": "Harvest two different crops. Buy seeds at the market crate." },
+    { "Key": "week.step.scarecrow.title", "Value": "KEEP THE CROWS AWAY" },
+    { "Key": "week.step.scarecrow.description", "Value": "Collect materials, craft a Scarecrow Kit at the workbench, then place it." },
+    { "Key": "week.step.expand_land.title", "Value": "MAKE ROOM TO GROW" },
+    { "Key": "week.step.expand_land.description", "Value": "Buy the first adjacent field upgrade at the market crate." },
+    { "Key": "week.step.tool_upgrade.title", "Value": "WORK SMARTER" },
+    { "Key": "week.step.tool_upgrade.description", "Value": "Select a tool and improve it at the market crate." },
+    { "Key": "week.step.sprinkler.title", "Value": "MORNING AUTOMATION" },
+    { "Key": "week.step.sprinkler.description", "Value": "Craft and place a Sprinkler Kit to water crops at 06:00." },
+    { "Key": "mining.prompt", "Value": "Stone outcrop: click or press F to mine." },
+    { "Key": "mining.depleted", "Value": "This outcrop will return tomorrow." },
+    { "Key": "mining.inventory_full", "Value": "Inventory full — make room before mining." },
+    { "Key": "mining.success", "Value": "Mined 2 Stone. The outcrop will return tomorrow." },
+    { "Key": "item.pond_fish.name", "Value": "Pond Fish" },
+    { "Key": "fishing.prompt", "Value": "Pond: click or press F to fish  •  {0}/{1} catches today" },
+    { "Key": "fishing.waiting", "Value": "Fishing... wait for a bite." },
+    { "Key": "fishing.limit", "Value": "The pond is resting. More fish return tomorrow." },
+    { "Key": "fishing.quiet", "Value": "Fish are quiet now. Try Morning or Dusk." },
+    { "Key": "fishing.cast", "Value": "Line cast. Wait for a bite..." },
+    { "Key": "fishing.inventory_full", "Value": "Inventory full — the fish got away." },
+    { "Key": "fishing.success", "Value": "Caught {0} Pond Fish!" },
+    { "Key": "inventory.summary.title", "Value": "INVENTORY" },
+    { "Key": "inventory.summary.empty", "Value": "Empty\n\nPress I to open" },
+    { "Key": "inventory.summary.slots", "Value": " slots  •  Press I to open" },
+    { "Key": "backend.unavailable", "Value": "Test backend unavailable." },
+    { "Key": "backend.tile.visual_rejected", "Value": "The plot tile visual state rejected the confirmation." },
+    { "Key": "backend.plant.select_seed", "Value": "Select a valid seed in the hotbar." },
+    { "Key": "backend.water.invalid", "Value": "Invalid watering request." },
+    { "Key": "backend.water.requires_seed", "Value": "Plant a seed before watering." },
+    { "Key": "backend.water.already", "Value": "This plot tile is already watered." },
+    { "Key": "backend.water.confirmed", "Value": "Watering confirmed by server." },
+    { "Key": "backend.prepare.next_seed", "Value": "{0} Select seeds (2)." },
+    { "Key": "backend.peer.awaiting_host", "Value": "Waiting for host confirmation." },
+    { "Key": "hud.resources", "Value": "${0}    Seeds: {1}    {2}: {3}" },
+    { "Key": "hud.shop.details", "Value": "{0}\n{1}\nMarket today: {2}  \u2022  Tomorrow: {3}\nSell N/S/G: ${4} / ${5} / ${6}  \u2022  {7} seeds: ${8}" },
+    { "Key": "hud.inventory.full", "Value": "Inventory full — use storage to make room." },
+    { "Key": "hud.storage.instructions", "Value": "Left click: full stack  \u2022  Shift + left click: half  \u2022  Right click: one item." },
+    { "Key": "hud.storage.stored", "Value": "Stored: {0}{1} x{2}." },
+    { "Key": "hud.storage.store_failed", "Value": "Could not store the item. Check storage space." },
+    { "Key": "hud.storage.retrieved", "Value": "Retrieved: {0}{1} x{2}." },
+    { "Key": "hud.storage.retrieve_failed", "Value": "Could not retrieve the item. Check inventory space." },
+    { "Key": "hud.inventory.organized", "Value": "Inventory organized." },
+    { "Key": "hud.inventory.already_organized", "Value": "Inventory is already organized." },
+    { "Key": "hud.storage.organized", "Value": "Storage organized." },
+    { "Key": "hud.storage.already_organized", "Value": "Storage is already organized." },
+    { "Key": "hud.journal.claimed", "Value": "Journal entry completed: +${0}" },
+    { "Key": "hud.day_transition", "Value": "DAY {0}  \u2022  06:00" },
+    { "Key": "hud.day_transition_weather", "Value": "DAY {0}  \u2022  06:00\n{1}" },
+    { "Key": "tooltip.category.seed", "Value": "SEED" },
+    { "Key": "tooltip.category.crop", "Value": "CROP" },
+    { "Key": "tooltip.category.tool", "Value": "TOOL" },
+    { "Key": "tooltip.category.material", "Value": "MATERIAL" },
+    { "Key": "tooltip.category.item", "Value": "ITEM" },
+    { "Key": "tooltip.use.seed", "Value": "Plant in prepared soil." },
+    { "Key": "tooltip.use.crop", "Value": "Sell it, fulfill orders, or store it." },
+    { "Key": "tooltip.use.tool", "Value": "Equip it in the hotbar." },
+    { "Key": "tooltip.use.material", "Value": "Use it in crafting recipes and buildings." },
+    { "Key": "tooltip.use.item", "Value": "A farm item." },
+    { "Key": "tooltip.value.market", "Value": "Today: ${0}  \u2022  Quality base: ${1}" },
+    { "Key": "tooltip.value.unit", "Value": "Unit value: ${0}" },
+    { "Key": "tooltip.value.none", "Value": "Not sold directly" },
+    { "Key": "tooltip.body", "Value": "{0}  \u2022  {1}  \u2022  QUALITY {2}\nQuantity: {3}  \u2022  Max stack: {4}\n{5}\n{6}" },
+    { "Key": "pests.today", "Value": "CROWS TODAY  \u2022  scarecrows protect crops" },
+    { "Key": "pests.tomorrow", "Value": "CROWS TOMORROW  \u2022  prepare scarecrows" },
+    { "Key": "pests.calm", "Value": "PESTS CALM  \u2022  no visit tomorrow" },
+    { "Key": "state.order.wrong_day", "Value": "This order does not belong to the current day." },
+    { "Key": "state.order.delivered", "Value": "This order has already been delivered." },
+    { "Key": "state.order.invalid_crop", "Value": "The order has an invalid crop." },
+    { "Key": "state.order.missing_crop", "Value": "Missing {0} {1}." },
+    { "Key": "state.mail.unavailable", "Value": "Mail is unavailable." },
+    { "Key": "state.mail.claimed", "Value": "This attachment has already been claimed." },
+    { "Key": "state.mail.no_attachment", "Value": "This mail has no attachment." },
+    { "Key": "state.mail.item_unknown", "Value": "The attached item is not in the catalog." },
+    { "Key": "state.mail.inventory_full", "Value": "Inventory full. Make room before claiming it." },
+    { "Key": "state.crafting.invalid_recipe", "Value": "Invalid recipe." },
+    { "Key": "state.crafting.invalid_ingredient", "Value": "The recipe has an invalid ingredient." },
+    { "Key": "state.crafting.missing_ingredient", "Value": "Missing {0} {1}." },
+    { "Key": "state.crafting.inventory_full", "Value": "Inventory does not have room for the crafted item." },
+    { "Key": "upgrade.maxed", "Value": "{0} is already at the maximum level." },
+    { "Key": "upgrade.success", "Value": "{0} upgraded to L{1}: {2} for ${3}." },
+    { "Key": "upgrade.insufficient_funds", "Value": "Not enough money. The upgrade costs ${0}." },
+    { "Key": "land.purchased", "Value": "Land expanded to {0} plot tiles for ${1}." },
+    { "Key": "land.insufficient_funds", "Value": "Not enough money. The expansion costs ${0}." },
+    { "Key": "catalog.selected", "Value": "Catalog: {0}." },
+    { "Key": "orders.delivered.feedback", "Value": "Order delivered: +${0}." },
+    { "Key": "orders.delivered.bonus", "Value": "Order delivered: +${0} (includes a ${1} full-board bonus)." },
+    { "Key": "sleep.confirm", "Value": "Confirm readiness to end the day." },
+    { "Key": "sleep.confirm_with_status", "Value": "{0} Confirm readiness." },
+    { "Key": "sleep.ready", "Value": "You are ready. {0}" },
+    { "Key": "day.good_morning_crop", "Value": "Good morning! {0} crop(s) grew overnight." },
+    { "Key": "day.good_morning", "Value": "Good morning! A new day has begun on the farm." },
+    { "Key": "day.energy_restored", "Value": " Energy restored: +{0}." },
+    { "Key": "day.energy_full", "Value": " Energy was already full." },
+    { "Key": "day.sprinklers", "Value": " Sprinklers watered {0} plot tile(s)." },
+    { "Key": "day.scarecrows", "Value": " Scarecrows protected {0} crop(s)." },
+    { "Key": "day.crows_delayed", "Value": " Crows delayed one crop by 2 seconds." },
+    { "Key": "hotbar.selected_item", "Value": "{0} selected." },
+    { "Key": "hotbar.selected_tool", "Value": "{0} selected." },
+    { "Key": "plot.ready", "Value": "Farm plot ready. Planting uses inventory hotbar slots." },
+    { "Key": "backend.plant.next_water", "Value": "{0} Water it now (3)." },
+    { "Key": "tile.none_selected", "Value": "No plot tile selected." },
+    { "Key": "tile.area.hoe", "Value": "Prepared {0} plot tiles at once." },
+    { "Key": "tile.area.water", "Value": "Watered {0} plot tiles at once." },
+    { "Key": "tile.area.harvest", "Value": "Harvested {0} plot tiles at once." },
+    { "Key": "tile.energy.free_action", "Value": " First wind: this action used no energy." },
+    { "Key": "tile.mastery.level_up", "Value": " {0} reached level {1}!" },
+    { "Key": "tile.energy.exhausted", "Value": " Energy depleted; area tools now affect one plot tile until sleep." },
+    { "Key": "tile.energy.tired", "Value": " Tired, but the action was completed." },
+    { "Key": "morning.scarecrows", "Value": "Good morning! Scarecrows protected {0} crop(s) from crows." },
+    { "Key": "morning.crows", "Value": "Good morning! Crows delayed one crop by 2 seconds." },
+    { "Key": "morning.sprinklers", "Value": "Good morning! Sprinklers watered {0} plot tile(s)." },
+    { "Key": "weather.rain.watered", "Value": "Rain watered {0} plot tile(s)." },
+    { "Key": "tool.area.one", "Value": "1 plot tile" },
+    { "Key": "tool.area.line", "Value": "3-tile line" },
+    { "Key": "tool.area.square", "Value": "3x3 area" },
+    { "Key": "tool.none", "Value": "Empty" },
+    { "Key": "tool.hoe", "Value": "Hoe" },
+    { "Key": "tool.seeds", "Value": "Seeds" },
+    { "Key": "tool.watering_can", "Value": "Watering Can" },
+    { "Key": "tool.harvest", "Value": "Harvest" },
+    { "Key": "save.none_found", "Value": "No save found." },
+    { "Key": "prompt.out_of_range", "Value": " (out of range)" },
+    { "Key": "prompt.tile", "Value": "Target: {0}{1}" },
+    { "Key": "prompt.market", "Value": "Market crate: click or press F to open commerce{0}" },
+    { "Key": "prompt.storage", "Value": "Storage: click or press F to manage items{0}" },
+    { "Key": "prompt.bed", "Value": "Bed: click or press F to end the day{0}" },
+    { "Key": "prompt.orders", "Value": "Order board: click or press F to view deliveries{0}" },
+    { "Key": "prompt.mailbox.unread", "Value": "Mailbox in range: press F. {0} new letter(s)." },
+    { "Key": "prompt.mailbox", "Value": "Mailbox in range: press F to view the schedule." },
+    { "Key": "prompt.orders.nearby", "Value": "Order board in range: press F to open daily orders." },
+    { "Key": "prompt.bed.nearby", "Value": "Bed in range: press F to rest." },
+    { "Key": "prompt.storage.nearby", "Value": "Storage in range: press F to open." },
+    { "Key": "prompt.market.nearby", "Value": "Market crate in range: press F to open commerce." },
+    { "Key": "prompt.default", "Value": "Hover a plot tile or move closer to a station." },
+    { "Key": "hud.energy.normal", "Value": "ENERGY  {0}/{1}" },
+    { "Key": "hud.energy.exhausted", "Value": "ENERGY  {0}/{1}  •  TIRED: reduced area" },
+    { "Key": "hud.tool.selected", "Value": "Selected: {0}" },
+    { "Key": "hud.inventory.open_hint", "Value": "Inventory open — drag items to the hotbar" },
+    { "Key": "hud.controls", "Value": "F interact  •  I/Tab inventory  •  J journal  •  K mastery  •  F5 save  •  F9 load    {0}" },
+    { "Key": "hud.upgrade.select_tool", "Value": "SELECT A TOOL TO UPGRADE" },
+    { "Key": "hud.upgrade.maxed", "Value": "{0} • MAX LEVEL" },
+    { "Key": "hud.upgrade.action", "Value": "UPGRADE {0} • ${1}" },
+    { "Key": "hud.land.maxed", "Value": "MAX LAND • {0} PLOT TILES" },
+    { "Key": "hud.land.buy", "Value": "BUY LAND L{0} • {1} PLOT TILES • ${2}" },
+    { "Key": "hud.inventory.showing", "Value": "  •  SHOWING {0}" },
+    { "Key": "hud.inventory.capacity", "Value": "INVENTORY  {0}/{1} slots{2}" },
+    { "Key": "hud.inventory.empty_slot", "Value": "Empty" },
+    { "Key": "hud.sleep.cancel", "Value": "CANCEL READY" },
+    { "Key": "storage.backpack", "Value": "BACKPACK" },
+    { "Key": "storage.chest", "Value": "STORAGE" },
+    { "Key": "hud.clock.title", "Value": "FARM TIME" },
+    { "Key": "hud.orders.title", "Value": "DAILY ORDERS" },
+    { "Key": "hud.orders.hint", "Value": "Orders refresh every morning. Deliveries count as sales in the journal." },
+    { "Key": "hud.sleep.title", "Value": "END THE DAY?" },
+    { "Key": "hud.sleep.description", "Value": "Sleeping requires every player in the session to be ready." },
+    { "Key": "hud.journal.title", "Value": "FARM JOURNAL" },
+    { "Key": "hud.journal.subtitle", "Value": "Permanent goals track your play style. Rewards are granted only when claimed." },
+    { "Key": "hud.inventory.title", "Value": "INVENTORY" },
+    { "Key": "hud.inventory.hint", "Value": "Drag to the hotbar • hover for details • filters never remove items" },
+    { "Key": "hud.filter.all", "Value": "ALL" },
+    { "Key": "hud.filter.seeds", "Value": "SEEDS" },
+    { "Key": "hud.filter.crops", "Value": "CROPS" },
+    { "Key": "hud.filter.materials", "Value": "MATERIALS" },
+    { "Key": "hud.filter.projects", "Value": "PROJECTS" },
+    { "Key": "hud.storage.title", "Value": "FARM STORAGE" },
+    { "Key": "hud.storage.hint", "Value": "Left: all • Shift + left: half • Right: one • Hover for details" },
+    { "Key": "ui.close.esc", "Value": "CLOSE  [ESC]" },
+    { "Key": "settings.launch", "Value": "OPTIONS  [F10]" },
+    { "Key": "settings.title", "Value": "SETTINGS" },
+    { "Key": "settings.subtitle", "Value": "Preferences are saved on this computer." },
+    { "Key": "settings.camera_sensitivity", "Value": "CAMERA SENSITIVITY" },
+    { "Key": "settings.camera_sensitivity.hint", "Value": "How far the mouse rotates the camera." },
+    { "Key": "settings.zoom_speed", "Value": "ZOOM SPEED" },
+    { "Key": "settings.zoom_speed.hint", "Value": "Distance changed for each mouse-wheel step." },
+    { "Key": "settings.zoom.value", "Value": "{0:0.0} units" },
+    { "Key": "settings.invert.title", "Value": "INVERT VERTICAL AXIS" },
+    { "Key": "settings.invert.hint", "Value": "Changes vertical direction while dragging with the right mouse button." },
+    { "Key": "settings.invert.enabled", "Value": "ENABLED" },
+    { "Key": "settings.invert.disabled", "Value": "DISABLED" },
+    { "Key": "settings.reset", "Value": "RESTORE DEFAULTS" },
+    { "Key": "crafting.launch.near", "Value": "WORKBENCH NEARBY  [F]" },
+    { "Key": "crafting.launch.far", "Value": "WORKBENCH  •  move closer" },
+    { "Key": "crafting.too_far", "Value": "Move within 1 unit of the workbench." },
+    { "Key": "crafting.confirmed", "Value": "Crafted: {0} x{1}." },
+    { "Key": "crafting.action", "Value": "CRAFT  x{0}" },
+    { "Key": "crafting.action_default", "Value": "CRAFT" },
+    { "Key": "crafting.missing_materials", "Value": "MISSING MATERIALS" },
+    { "Key": "crafting.title", "Value": "CRAFTING WORKBENCH" },
+    { "Key": "crafting.subtitle", "Value": "Materials are consumed only when the crafted item fits in the backpack." },
+    { "Key": "mastery.cultivation.name", "Value": "CULTIVATION" },
+    { "Key": "mastery.harvesting.name", "Value": "HARVESTING" },
+    { "Key": "mastery.commerce.name", "Value": "COMMERCE" },
+    { "Key": "mastery.cultivation.description", "Value": "Prepare, plant, and water plot tiles." },
+    { "Key": "mastery.harvesting.description", "Value": "Harvest crops and find items in the world." },
+    { "Key": "mastery.commerce.description", "Value": "Sell, buy seeds, and deliver orders." },
+    { "Key": "mastery.cultivation.perk2", "Value": "FIRST WIND: the first cultivation action of the day costs no energy." },
+    { "Key": "mastery.harvesting.perk2", "Value": "KEEN EYE: world items are drawn from 4 units away." },
+    { "Key": "mastery.commerce.perk2", "Value": "LOCAL SCHEDULE: the board reveals tomorrow's requested crops." },
+    { "Key": "mastery.cultivation.perk3", "Value": "CONTINUOUS CYCLE: harvesting replants the same crop when a seed is available." },
+    { "Key": "mastery.harvesting.perk3", "Value": "SUPPORT BASKET: harvests without room go straight to storage." },
+    { "Key": "mastery.commerce.perk3", "Value": "CONNECTED STOCK: orders also use products stored in farm storage." },
+    { "Key": "mastery.maxed", "Value": "MAX MASTERY" },
+    { "Key": "mastery.progress", "Value": "{0}/{1} XP" },
+    { "Key": "mastery.card", "Value": "{0}  -  LEVEL {1}\n{2}  {3}\n\n{4} L2  {5}\n{6} L3  {7}\n\n{8}" },
+    { "Key": "mastery.launch", "Value": "MASTERY  [K]" },
+    { "Key": "mastery.title", "Value": "FARM MASTERY" },
+    { "Key": "mastery.subtitle", "Value": "Practice unlocks new ways to work without replacing your choices." },
+    { "Key": "mastery.close", "Value": "CLOSE  [K]" },
+    { "Key": "ui.page", "Value": "PAGE {0}/{1}" },
+    { "Key": "collection.launch", "Value": "COLLECTIONS  [L]" },
+    { "Key": "collection.title", "Value": "FARM COLLECTIONS" },
+    { "Key": "collection.subtitle", "Value": "Items stay recorded after being sold, used, or stored." },
+    { "Key": "collection.progress", "Value": "DISCOVERED  {0}/{1}  •  {2}%" },
+    { "Key": "collection.undiscovered", "Value": "Not discovered yet\nFind, harvest, or craft it." },
+    { "Key": "collection.type.project", "Value": "PROJECT" },
+    { "Key": "collection.type.seed", "Value": "SEED" },
+    { "Key": "collection.type.crop", "Value": "CROP" },
+    { "Key": "collection.type.material", "Value": "MATERIAL" },
+    { "Key": "collection.type.tool", "Value": "TOOL" },
+    { "Key": "collection.type.item", "Value": "ITEM" },
+    { "Key": "collection.value.base", "Value": "Base value: ${0}" },
+    { "Key": "collection.value.build", "Value": "Used for building" },
+    { "Key": "collection.value.none", "Value": "Not sold directly" },
+    { "Key": "collection.card.details", "Value": "{0}\nOwned: {1}  •  Stack: {2}\n{3}" },
+    { "Key": "collection.filter.all", "Value": "ALL" },
+    { "Key": "collection.filter.all_items", "Value": "ALL ITEMS" },
+    { "Key": "collection.filter.seeds", "Value": "SEEDS" },
+    { "Key": "collection.filter.crops", "Value": "CROPS" },
+    { "Key": "collection.filter.materials", "Value": "MATERIALS" },
+    { "Key": "collection.filter.projects", "Value": "PROJECTS" },
+    { "Key": "catalog.empty_database", "Value": "The building catalog is empty." },
+    { "Key": "catalog.results", "Value": "{0} project(s) found" },
+    { "Key": "catalog.default_description", "Value": "A project ready to place on the farm." },
+    { "Key": "catalog.cost", "Value": "COST  1 KIT   •   BACKPACK x{0}" },
+    { "Key": "catalog.place", "Value": "PLACE" },
+    { "Key": "catalog.no_kit", "Value": "NO KIT" },
+    { "Key": "catalog.kit_required", "Value": "Craft {0} at the workbench first." },
+    { "Key": "catalog.title", "Value": "BUILDING CATALOG" },
+    { "Key": "catalog.subtitle", "Value": "Choose a project. The kit is spent only after confirming a valid location." },
+    { "Key": "catalog.close", "Value": "CLOSE  [B/ESC]" },
+    { "Key": "catalog.search.placeholder", "Value": "Search by name, function, or category..." },
+    { "Key": "catalog.filter.all", "Value": "ALL" },
+    { "Key": "catalog.filter.farming", "Value": "FARMING" },
+    { "Key": "catalog.filter.automation", "Value": "AUTOMATION" },
+    { "Key": "catalog.filter.fences", "Value": "FENCES" },
+    { "Key": "catalog.filter.decoration", "Value": "DECORATION" },
+    { "Key": "catalog.empty_results", "Value": "NO PROJECTS FOUND\nClear the search or choose another category." },
+    { "Key": "catalog.default_page", "Value": "PAGE 1/1" },
+    { "Key": "catalog.type.project", "Value": "PROJECT" },
+    { "Key": "journal.cultivated_land.category", "Value": "INTRODUCTION" },
+    { "Key": "journal.cultivated_land.title", "Value": "Cultivated land" },
+    { "Key": "journal.cultivated_land.description", "Value": "Prepare 10 plot tiles with the hoe." },
+    { "Key": "journal.harvest_basket.category", "Value": "PRODUCTION" },
+    { "Key": "journal.harvest_basket.title", "Value": "Full basket" },
+    { "Key": "journal.harvest_basket.description", "Value": "Harvest 12 products from any crop." },
+    { "Key": "journal.crop_variety.category", "Value": "DISCOVERY" },
+    { "Key": "journal.crop_variety.title", "Value": "Four seasons" },
+    { "Key": "journal.crop_variety.description", "Value": "Harvest strawberry, corn, pumpkin, and carrot." },
+    { "Key": "journal.better_tools.category", "Value": "PROGRESSION" },
+    { "Key": "journal.better_tools.title", "Value": "Work smarter" },
+    { "Key": "journal.better_tools.description", "Value": "Buy 2 tool upgrades." },
+    { "Key": "journal.world_collector.category", "Value": "EXPLORATION" },
+    { "Key": "journal.world_collector.title", "Value": "Keen eyes" },
+    { "Key": "journal.world_collector.description", "Value": "Collect the 3 items around the farm." },
+    { "Key": "journal.card", "Value": "{0}  •  {1}\n{2}\n{3}/{4}  •  Reward: ${5}" },
+    { "Key": "journal.claimed", "Value": "CLAIMED" },
+    { "Key": "journal.claim", "Value": "CLAIM" },
+    { "Key": "journal.in_progress", "Value": "IN PROGRESS" },
+    { "Key": "mail.reward.none", "Value": "No attachment" },
+    { "Key": "mail.reward.none_short", "Value": "NO ATTACHMENT" },
+    { "Key": "mail.welcome.sender", "Value": "Farm Association" },
+    { "Key": "mail.welcome.title", "Value": "Welcome to your new farm" },
+    { "Key": "mail.welcome.body", "Value": "We prepared this mailbox for notices, gifts, and local events. Letters never expire: read at your own pace and claim each attachment once." },
+    { "Key": "mail.seed_fair.sender", "Value": "Growers' Fair" },
+    { "Key": "mail.seed_fair.title", "Value": "{0} Seed Fair" },
+    { "Key": "mail.seed_fair.body", "Value": "The {0} fair has arrived. We sent seeds for the crop with the best affinity for this season." },
+    { "Key": "mail.community.sender", "Value": "Valley Neighbors" },
+    { "Key": "mail.community.title", "Value": "Community work day" },
+    { "Key": "mail.community.body", "Value": "Today we care for paths and fences. Here is a little help as you continue improving your farm." },
+    { "Key": "mail.too_far", "Value": "Move closer to the mailbox." },
+    { "Key": "mail.claimed.feedback", "Value": "Letter attachment claimed." },
+    { "Key": "mail.select", "Value": "Select a letter." },
+    { "Key": "mail.state.claimed", "Value": "CLAIMED" },
+    { "Key": "mail.state.read", "Value": "READ" },
+    { "Key": "mail.state.new", "Value": "NEW" },
+    { "Key": "mail.summary", "Value": "UNREAD  {0}   •   ATTACHMENTS  {1}" },
+    { "Key": "mail.from", "Value": "FROM  {0}" },
+    { "Key": "mail.attachment", "Value": "ATTACHMENT  •  {0}" },
+    { "Key": "mail.status.claimed", "Value": "Attachment already claimed." },
+    { "Key": "mail.status.available", "Value": "Available to claim." },
+    { "Key": "mail.status.informational", "Value": "Informational letter." },
+    { "Key": "mail.claim_attachment", "Value": "CLAIM ATTACHMENT" },
+    { "Key": "mail.next_event", "Value": "NEXT EVENT  •  {0}  •  {1}" },
+    { "Key": "mail.no_event", "Value": "LOCAL SCHEDULE IS QUIET" },
+    { "Key": "mail.title", "Value": "MAILBOX" },
+    { "Key": "mail.default_page", "Value": "PAGE 1/1" },
+    { "Key": "mail.calendar", "Value": "YEAR {0}  •  {1} {2}/{3}" },
+    { "Key": "backend.harvest.invalid", "Value": "Invalid harvest request." },
+    { "Key": "backend.harvest.requires_crop", "Value": "Plant a crop before harvesting." },
+    { "Key": "backend.harvest.not_ready", "Value": "The crop is not ready yet." },
+    { "Key": "backend.harvest.crop_unknown", "Value": "The plot crop is invalid." },
+    { "Key": "backend.harvest.inventory_full", "Value": "Inventory full. Make room before harvesting." },
+    { "Key": "backend.harvest.confirmed", "Value": "Harvest confirmed by server." },
+    { "Key": "save.not_created", "Value": "Save not created yet." },
+    { "Key": "building.select_kit", "Value": "Select a buildable kit from the hotbar." },
+    { "Key": "building.item_missing", "Value": "You do not have {0}." },
+    { "Key": "building.move.too_far", "Value": "Move closer to reposition it." },
+    { "Key": "building.kit_missing", "Value": "That kit is no longer in your inventory." },
+    { "Key": "building.record_failed", "Value": "Could not record the building placement." },
+    { "Key": "building.fence_connected", "Value": "{0} connected. Keep placing or press Esc." },
+    { "Key": "building.placed", "Value": "{0} placed." },
+    { "Key": "building.update_failed", "Value": "Could not update the building placement." },
+    { "Key": "building.fallback_name", "Value": "Building" },
+    { "Key": "building.moved", "Value": "{0} moved without spending a kit." },
+    { "Key": "building.reclaim.too_far", "Value": "Move closer to reclaim it." },
+    { "Key": "building.reclaimed", "Value": "{0} returned to your inventory." },
+    { "Key": "building.move.aim", "Value": "Aim at a nearby building to move it." },
+    { "Key": "building.reclaim.aim", "Value": "Aim at a nearby building to reclaim it." },
+    { "Key": "building.ground.aim", "Value": "Aim at reachable ground." },
+    { "Key": "building.definition.invalid", "Value": "Invalid building definition." },
+    { "Key": "building.location.too_far", "Value": "That location is too far away." },
+    { "Key": "building.location.occupied", "Value": "A building already occupies that space." },
+    { "Key": "building.location.blocked", "Value": "That space is blocked." },
+    { "Key": "building.launcher", "Value": "BUILD  [B]  •  {0} kit{1}" },
+    { "Key": "building.status.snapped", "Value": "SNAPPED" },
+    { "Key": "building.status.valid", "Value": "VALID LOCATION" },
+    { "Key": "building.grid.on", "Value": "grid on" },
+    { "Key": "building.grid.off", "Value": "grid off" },
+    { "Key": "building.instructions.move", "Value": "Click: confirm move  •  R: rotate  •  H: {0}  •  Esc: undo" },
+    { "Key": "building.instructions.fence", "Value": "Click: place/continue  •  R: 90°  •  H: {0}  •  Esc: finish" },
+    { "Key": "building.instructions.place", "Value": "Click: place  •  R: rotate  •  H: {0}  •  Esc: cancel" },
+    { "Key": "building.mode.move", "Value": "MOVE  •  " },
+    { "Key": "hud.hotbar.confirming", "Value": "Confirming..." },
+    { "Key": "hud.storage.backpack_capacity", "Value": "INVENTORY  {0}/{1}" },
+    { "Key": "hud.storage.chest_capacity", "Value": "STORAGE  {0}/{1}" },
+    { "Key": "item.chicken_egg.name", "Value": "Chicken Egg" },
+    { "Key": "item.animal_feed.name", "Value": "Animal Feed" },
+    { "Key": "animals.supply.prompt", "Value": "Feed supply: press F to collect animal feed." },
+    { "Key": "animals.feeder.prompt", "Value": "Chicken feeder: press F to feed ({0} feed in inventory)" },
+    { "Key": "animals.egg.prompt", "Value": "Egg nest: press F to collect an egg." },
+    { "Key": "animals.fed", "Value": "Chickens are fed for today." },
+    { "Key": "animals.nest.empty", "Value": "Egg nest: collected for today." },
+    { "Key": "animals.nest.waiting", "Value": "Feed the chickens to receive an egg." },
+    { "Key": "animals.feed_missing", "Value": "You need animal feed first." },
+    { "Key": "animals.feed_success", "Value": "The chickens are happy. Check the nest." },
+    { "Key": "animals.inventory_full", "Value": "Inventory full - leave space for animal goods." },
+    { "Key": "backend.hotbar.selection_confirmed", "Value": "Hotbar selection confirmed by server." },
+    { "Key": "backend.hotbar.swap_confirmed", "Value": "Hotbar arrangement confirmed by server." }
+    ,{ "Key": "hud.hotbar.core_tool_locked", "Value": "Core tools stay in the hotbar. Drag them to rearrange." }
+    ,{ "Key": "hud.hotbar.core_tool_restored", "Value": "Core tool restored to the hotbar." }
+    ,{ "Key": "homestead.zone.home", "Value": "HOME" }
+    ,{ "Key": "homestead.zone.field", "Value": "FIELDS" }
+    ,{ "Key": "homestead.zone.storage", "Value": "STORAGE" }
+    ,{ "Key": "homestead.zone.work", "Value": "WORKSHOP" }
+    ,{ "Key": "homestead.zone.animals", "Value": "ANIMALS" }
+    ,{ "Key": "homestead.zone.chicken_yard", "Value": "CHICKEN YARD" }
+    ,{ "Key": "catalog.filter.utility", "Value": "UTILITY" }
+    ,{ "Key": "item.farm_shed_kit.name", "Value": "Farm Shed Kit" }
+    ,{ "Key": "buildable.farm_shed.name", "Value": "Farm Shed" }
+    ,{ "Key": "buildable.farm_shed.description", "Value": "Adds 15 storage slots to the farm chest while placed." }
+    ,{ "Key": "recipe.farm_shed.name", "Value": "Farm Shed Kit" }
+    ,{ "Key": "recipe.farm_shed.description", "Value": "Build a compact utility shed that expands shared storage." }
+    ,{ "Key": "building.storage_shed.reclaim_blocked", "Value": "Move items out of storage before reclaiming this Farm Shed." }
+    ,{ "Key": "item.garden_bench_kit.name", "Value": "Garden Bench Kit" }
+    ,{ "Key": "item.garden_planter_kit.name", "Value": "Garden Planter Kit" }
+    ,{ "Key": "buildable.garden_bench.name", "Value": "Garden Bench" }
+    ,{ "Key": "buildable.garden_bench.description", "Value": "A cozy bench for shaping a welcoming farm." }
+    ,{ "Key": "buildable.garden_planter.name", "Value": "Garden Planter" }
+    ,{ "Key": "buildable.garden_planter.description", "Value": "A decorative planter for adding color to the homestead." }
+    ,{ "Key": "recipe.garden_bench.name", "Value": "Garden Bench Kit" }
+    ,{ "Key": "recipe.garden_bench.description", "Value": "Craft a simple bench for your shared outdoor space." }
+    ,{ "Key": "recipe.garden_planter.name", "Value": "Garden Planter Kit" }
+    ,{ "Key": "recipe.garden_planter.description", "Value": "Craft a planter to make paths and work areas feel cared for." }
+    ,{ "Key": "homestead.hud.egg", "Value": "HOMESTEAD  •  Chicken Yard: collect today's egg." }
+    ,{ "Key": "homestead.hud.feed", "Value": "HOMESTEAD  •  Chicken Yard: feed the chickens for today's egg." }
+    ,{ "Key": "homestead.hud.shed", "Value": "HOMESTEAD  •  Farm Shed active  •  Shared storage {0}/{1}" }
+    ,{ "Key": "homestead.hud.decorate", "Value": "HOMESTEAD  •  Keep shaping the shared space with paths and decorations." }
+    ,{ "Key": "homestead.hud.routine", "Value": "HOMESTEAD  •  Farm, craft, care for chickens, and organize the day together." }
+    ,{ "Key": "tool.axe", "Value": "Axe" }
+    ,{ "Key": "tool.pickaxe", "Value": "Pickaxe" }
+    ,{ "Key": "hotbar.axe", "Value": "AXE" }
+    ,{ "Key": "hotbar.pickaxe", "Value": "PICKAXE" }
+    ,{ "Key": "mining.pickaxe_required", "Value": "Stone outcrop: equip the Pickaxe to mine." }
+    ,{ "Key": "mining.hit", "Value": "Outcrop struck. {0} hits remaining." }
+    ,{ "Key": "item.refined_stone.name", "Value": "Refined Stone" }
+    ,{ "Key": "processing.prompt", "Value": "Workbench: press F to refine Stone." }
+    ,{ "Key": "processing.running", "Value": "Refining is still in progress." }
+    ,{ "Key": "processing.inventory_full", "Value": "Make room before collecting the refined material." }
+    ,{ "Key": "processing.started", "Value": "Refining started. It finishes in 10 game minutes." }
+    ,{ "Key": "processing.missing", "Value": "Need 2 Stone to refine." }
+    ,{ "Key": "state.crafting.mastery_locked", "Value": "Requires {0} Mastery level {1}." }
+    ,{ "Key": "crafting.mastery_required", "Value": "Requires {0} Mastery level {1}." }
+    ,{ "Key": "crafting.mastery_locked_button", "Value": "LOCKED: {0} L{1}" }
+    ,{ "Key": "hud.upgrade.mastery_locked", "Value": "REQUIRES {0} MASTERY L{1}" }
+    ,{ "Key": "upgrade.mastery_required", "Value": "Requires {0} Mastery level {1}." }
+    ,{ "Key": "mastery.focus.none", "Value": "NO SPECIALIZATION - all tracks stop before level 3 until you commit one." }
+    ,{ "Key": "mastery.focus.current", "Value": "COMMITTED SPECIALIZATION: {0}  (+25% XP, Level 3 access)" }
+    ,{ "Key": "mastery.focus.selected", "Value": "SPECIALIZATION COMMITTED" }
+    ,{ "Key": "mastery.focus.select", "Value": "[{0}] COMMIT SPECIALIZATION" }
+    ,{ "Key": "mastery.focus.locked", "Value": "[{0}] SPECIALIZATION UNLOCKS AT LEVEL 2" }
+    ,{ "Key": "mastery.focus.invalid", "Value": "Choose a valid mastery focus." }
+    ,{ "Key": "mastery.focus.requires_level", "Value": "{0} focus requires {0} Mastery level 2." }
+    ,{ "Key": "mastery.focus.changed", "Value": "Specialization committed to {0}. It earns 25% more XP and can reach Level 3." }
+    ,{ "Key": "market.trend.weak", "Value": "WEAK" }
+    ,{ "Key": "market.trend.stable", "Value": "STABLE" }
+    ,{ "Key": "market.trend.strong", "Value": "STRONG" }
+    ,{ "Key": "market.trend.peak", "Value": "PEAK" }
+    ,{ "Key": "economy.ledger.launch", "Value": "BALANCE LEDGER  [F9]" }
+    ,{ "Key": "economy.ledger.title", "Value": "ECONOMY LEDGER" }
+    ,{ "Key": "economy.ledger.subtitle", "Value": "Development diagnostics for first-week income and investment pacing." }
+    ,{ "Key": "economy.ledger.close", "Value": "CLOSE  [F9]" }
+    ,{ "Key": "economy.ledger.crop_header", "Value": "CROP ECONOMY - one full seed pack" }
+    ,{ "Key": "economy.ledger.crop_row", "Value": "{0}: pack ${1} / {2} seeds | yield {3}-{4} | value ${5} | expected ${6}-${7} | profit ${8}-${9} | {10}" }
+    ,{ "Key": "economy.ledger.targets", "Value": "NEXT INVESTMENTS - Hoe: ${0} | Land: ${1} | Board bonus: ${2}" }
+    ,{ "Key": "item.greenhouse_kit.name", "Value": "Greenhouse Kit" }
+    ,{ "Key": "buildable.greenhouse.name", "Value": "Greenhouse" }
+    ,{ "Key": "buildable.greenhouse.description", "Value": "Creates a climate-controlled growing area for off-season crops." }
+    ,{ "Key": "recipe.greenhouse.name", "Value": "Greenhouse Kit" }
+    ,{ "Key": "recipe.greenhouse.description", "Value": "Build a climate-controlled structure for growing crops beyond their usual season." }
+    ,{ "Key": "backend.plant.out_of_season", "Value": "{0} can only be planted in {1}, unless this tile is covered by a greenhouse." }
+    ,{ "Key": "planner.launch", "Value": "PLANNER  [P]" }
+    ,{ "Key": "planner.title", "Value": "SEASONAL PLANNER" }
+    ,{ "Key": "planner.headers", "Value": "CROP / PREFERRED SEASON / ACTION" }
+    ,{ "Key": "planner.season", "Value": "YEAR {0}  -  {1}  DAY {2}/{3}" }
+    ,{ "Key": "planner.crop.in_season", "Value": "PLANT OUTDOORS" }
+    ,{ "Key": "planner.crop.greenhouse", "Value": "GREENHOUSE REQUIRED" }
+    ,{ "Key": "planner.crop.row", "Value": "{0}  -  {1}  -  {2}\n" }
+    ,{ "Key": "planner.greenhouse", "Value": "Greenhouse coverage allows off-season planting and applies the crop's preferred-season harvest result while it remains placed." }
+    ,{ "Key": "journal.village_regular.category", "Value": "FARM PROJECT" }
+    ,{ "Key": "journal.village_regular.title", "Value": "Village Regular" }
+    ,{ "Key": "journal.village_regular.description", "Value": "Complete 5 village orders to establish a reliable farm delivery route." }
+    ,{ "Key": "permission.host_management", "Value": "Only the farm host can manage buildings, funds, or session settings." }
+    ,{ "Key": "item.compost.name", "Value": "Compost" }
+    ,{ "Key": "tool.compost", "Value": "Compost" }
+    ,{ "Key": "tooltip.category.fertilizer", "Value": "FERTILIZER" }
+    ,{ "Key": "tooltip.use.fertilizer", "Value": "Use on prepared soil or a crop before it is ready." }
+    ,{ "Key": "collection.type.fertilizer", "Value": "FERTILIZER" }
+    ,{ "Key": "backend.fertilize.invalid", "Value": "Select compost in the hotbar." }
+    ,{ "Key": "backend.fertilize.requires_active_crop", "Value": "Compost can only enrich prepared soil or a crop before it is ready." }
+    ,{ "Key": "backend.fertilize.already", "Value": "This plot tile is already enriched." }
+    ,{ "Key": "backend.fertilize.missing", "Value": "You do not have {0}." }
+    ,{ "Key": "backend.fertilize.confirmed", "Value": "Compost confirmed by server. This crop will yield +1 and gain quality." }
+    ,{ "Key": "tile.harvest.compost_bonus", "Value": " Compost increased this harvest." }
+    ,{ "Key": "animals.command.invalid", "Value": "Invalid animal-care command." }
+    ,{ "Key": "animals.supply.collected", "Value": "Today's feed supply was already collected." }
+    ,{ "Key": "animals.feed_collected", "Value": "Animal feed collected." }
+    ,{ "Key": "animals.feed_success_streak", "Value": "Chickens are fed. Care streak: {0} day(s)." }
+    ,{ "Key": "animals.egg_collected", "Value": "Collected a {0} egg." }
+    ,{ "Key": "production.command.invalid", "Value": "Invalid production command." }
+    ,{ "Key": "processing.collected", "Value": "Collected {0} x{1}." }
+    ,{ "Key": "mastery.specialization.committed", "Value": "Specialization is already committed for this profile." }
+    ,{ "Key": "mastery.specialization.changed", "Value": "Specialization committed: {0}." }
+    ,{ "Key": "item.dawn_trout.name", "Value": "Dawn Trout" }
+    ,{ "Key": "item.rain_carp.name", "Value": "Rain Carp" }
+    ,{ "Key": "item.sunset_perch.name", "Value": "Sunset Perch" }
+    ,{ "Key": "item.fish_skewer.name", "Value": "Fish Skewer" }
+    ,{ "Key": "recipe.09_fish_skewer.name", "Value": "Fish Skewer" }
+    ,{ "Key": "recipe.09_fish_skewer.description", "Value": "Turn a common Pond Fish into a quick, restorative meal." }
+    ,{ "Key": "fishing.prompt_conditions", "Value": "Pond: click or press F to fish ({0}/{1} catches today)\n{2}" }
+    ,{ "Key": "fishing.condition.rain", "Value": "Rain is stirring up Carp." }
+    ,{ "Key": "fishing.condition.dawn", "Value": "Morning water may hold Trout." }
+    ,{ "Key": "fishing.condition.dusk", "Value": "Dusk water may hold Perch." }
+    ,{ "Key": "fishing.condition.calm", "Value": "Calm water favors common Pond Fish." }
+    ,{ "Key": "fishing.command.invalid", "Value": "Invalid fishing command." }
+    ,{ "Key": "fishing.success_species", "Value": "Caught {0} {1}!" }
+    ,{ "Key": "orders.type.crop", "Value": "FARMING" }
+    ,{ "Key": "orders.type.fishing", "Value": "FISHING" }
+    ,{ "Key": "orders.type.animal", "Value": "ANIMAL CARE" }
+    ,{ "Key": "orders.type.production", "Value": "WORKSHOP" }
+    ,{ "Key": "orders.item", "Value": "{0}: {1} x{2}" }
+    ,{ "Key": "state.order.invalid_item", "Value": "The order has an invalid item." }
+    ,{ "Key": "state.order.missing_item", "Value": "Missing {0} {1}." }
+    ,{ "Key": "item.pumpkin_roast.name", "Value": "Pumpkin Roast" }
+    ,{ "Key": "item.farm_omelet.name", "Value": "Farm Omelet" }
+    ,{ "Key": "recipe.10_pumpkin_roast.name", "Value": "Pumpkin Roast" }
+    ,{ "Key": "recipe.10_pumpkin_roast.description", "Value": "Roast a farm-grown pumpkin into dependable day energy." }
+    ,{ "Key": "recipe.11_farm_omelet.name", "Value": "Farm Omelet" }
+    ,{ "Key": "recipe.11_farm_omelet.description", "Value": "A warm egg-and-wildflower meal for a demanding shared day." }
+    ,{ "Key": "crafting.discovery_required", "Value": "Discover an ingredient to learn this recipe." }
+    ,{ "Key": "crafting.discovery_locked_button", "Value": "DISCOVER RECIPE" }
+    ,{ "Key": "state.crafting.discovery_locked", "Value": "Discover an ingredient to learn this recipe." }
+    ,{ "Key": "stewardship.invalid", "Value": "That gathering site cannot be restored." }
+    ,{ "Key": "stewardship.requires_depleted", "Value": "Only a resting outcrop can be renewed." }
+    ,{ "Key": "stewardship.requires_rain", "Value": "Renewal works only while it is raining." }
+    ,{ "Key": "stewardship.already", "Value": "This outcrop is already prepared for its next return." }
+    ,{ "Key": "stewardship.compost_missing", "Value": "You need Compost to renew this outcrop." }
+    ,{ "Key": "stewardship.prompt", "Value": "Resting outcrop: press F to spend Compost and improve tomorrow's yield." }
+    ,{ "Key": "stewardship.success", "Value": "Compost settled into the rain. Tomorrow this outcrop will yield +1 Stone." }
+    ,{ "Key": "mining.success_stewarded", "Value": "Mined {0} Stone. Stewardship improved this outcrop." }
+    ,{ "Key": "processing.prompt_queue", "Value": "Workbench: press F to refine Stone. Queue {0}/{1}." }
+    ,{ "Key": "processing.queue_full", "Value": "The workshop queue is full. Let a job finish first." }
+    ,{ "Key": "processing.queued", "Value": "Refining queued ({0}/{1}). It begins after the current job." }
+    ,{ "Key": "morning.processor_storage", "Value": "Workshop storage collected {0} processed item(s)." }
+    ,{ "Key": "tile.status.rotated_suffix", "Value": "  •  rotated soil" }
+    ,{ "Key": "tile.harvest.rotation_bonus", "Value": " Crop rotation improved its quality." }
+    ,{ "Key": "animals.favorite.completed", "Value": "{0} has already received a favorite gift today." }
+    ,{ "Key": "animals.favorite.ready", "Value": "{0} recognizes their favorite, {1}. Press F to offer it." }
+    ,{ "Key": "animals.favorite.hint", "Value": "{0} loves {1}. Select it in the hotbar and press F for a favorite gift." }
+    ,{ "Key": "animals.favorite.care_first", "Value": "Care for {0} before offering a favorite gift." }
+    ,{ "Key": "animals.favorite.missing", "Value": "You need {0} for {1}." }
+    ,{ "Key": "animals.favorite.success", "Value": "{0} loved the gift. Affection: {1}." }
+    ,{ "Key": "animals.favorite.harmony", "Value": "{0} loved the gift. Coop Harmony improves today's egg quality." }
+    ,{ "Key": "animals.egg_harmony_suffix", "Value": " Coop Harmony improved the flock's quality." }
+    ,{ "Key": "item.egg_preserve.name", "Value": "Egg Preserve" }
+    ,{ "Key": "item.pumpkin_jam.name", "Value": "Pumpkin Jam" }
+    ,{ "Key": "item.smoked_fish.name", "Value": "Smoked Fish" }
+    ,{ "Key": "processing.collected_quality", "Value": "Collected {0} x{1} ({2})." }
+    ,{ "Key": "processing.select_input", "Value": "Select Stone, Eggs, Pumpkin, or Pond Fish in the hotbar." }
+    ,{ "Key": "processing.missing_recipe", "Value": "Need {0} x{1} for {2}." }
+    ,{ "Key": "processing.queue_failed", "Value": "The workbench could not queue that job." }
+    ,{ "Key": "processing.queued_recipe", "Value": "{0} queued ({1}/{2}). It begins after the current job." }
+    ,{ "Key": "processing.prompt_recipe", "Value": "Workbench: {0} x{1} -> {2}. Press F to queue. {3}/{4} jobs." }
+    ,{ "Key": "exploration.energy_required", "Value": "You need {0} Energy to finish this route." }
+    ,{ "Key": "item.speckled_egg.name", "Value": "Speckled Egg" }
+    ,{ "Key": "animals.care.prompt", "Value": "{0} - {1} Affection: press F to care ({2})." }
+    ,{ "Key": "animals.care.completed", "Value": "{0} has already received personal care today." }
+    ,{ "Key": "animals.care.requires_feed", "Value": "Feed the flock before caring for {0}." }
+    ,{ "Key": "animals.care.feed_first", "Value": "Feed the flock before individual care." }
+    ,{ "Key": "animals.care.unknown", "Value": "That animal is not part of this coop." }
+    ,{ "Key": "animals.care.success", "Value": "{0} trusts the farm more. Affection: {1}. {2}" }
+    ,{ "Key": "animals.trait.steady.name", "Value": "Steady Layer" }
+    ,{ "Key": "animals.trait.generous.name", "Value": "Generous Layer" }
+    ,{ "Key": "animals.trait.speckled.name", "Value": "Speckled Layer" }
+    ,{ "Key": "animals.trait.kind.name", "Value": "Kind Companion" }
+    ,{ "Key": "animals.trait.steady.benefit", "Value": "At 2 Affection, Pip's daily care improves egg quality." }
+    ,{ "Key": "animals.trait.generous.benefit", "Value": "At 3 Affection, Clover's daily care adds an extra egg." }
+    ,{ "Key": "animals.trait.speckled.benefit", "Value": "At 2 Affection, Maple's daily care produces a Speckled Egg." }
+    ,{ "Key": "animals.expansion.prompt", "Value": "Coop expansion: Wood {0}/{1}, Stone {2}/{3}. Select Wood or Stone and press F." }
+    ,{ "Key": "animals.expansion.complete", "Value": "Coop expansion complete: Maple has joined the flock." }
+    ,{ "Key": "animals.expansion.material_required", "Value": "Select Wood or Stone from the hotbar." }
+    ,{ "Key": "animals.expansion.material_filled", "Value": "That expansion material is already complete." }
+    ,{ "Key": "animals.expansion.missing", "Value": "That material is no longer in the inventory." }
+    ,{ "Key": "animals.expansion.contributed", "Value": "Coop expansion material accepted." }
+    ,{ "Key": "animals.expansion.success", "Value": "Coop expanded! Maple joined the flock and can produce Speckled Eggs." }
+    ,{ "Key": "animals.egg_collected_amount", "Value": "Collected {0} {1} egg(s)." }
+    ,{ "Key": "animals.egg_collected_variety", "Value": "Collected {0} {1} egg(s) and {2} Speckled Egg." }
+    ,{ "Key": "collection.progress_milestone", "Value": "DISCOVERED {0}/{1}  •  {2}%\nNEXT: {3} discoveries -> {4} x{5}. Press C to claim when ready." }
+    ,{ "Key": "collection.progress_complete", "Value": "DISCOVERED {0}/{1}  •  Collection rewards claimed." }
+    ,{ "Key": "collection.milestone.locked", "Value": "Discover {0} items to claim the next collection reward." }
+    ,{ "Key": "collection.milestone.inventory_full", "Value": "Make room before claiming the collection reward." }
+    ,{ "Key": "collection.milestone.complete", "Value": "All collection rewards have been claimed." }
+    ,{ "Key": "collection.milestone.claimed", "Value": "Collection reward claimed: {0} x{1}." }
+    ,{ "Key": "roles.none", "Value": "UNASSIGNED" }
+    ,{ "Key": "roles.cultivation", "Value": "CULTIVATOR" }
+    ,{ "Key": "roles.harvesting", "Value": "GATHERER" }
+    ,{ "Key": "roles.commerce", "Value": "STEWARD" }
+    ,{ "Key": "roles.invalid", "Value": "Choose a valid co-op role." }
+    ,{ "Key": "roles.full", "Value": "This farm already has four co-op role profiles." }
+    ,{ "Key": "roles.locked", "Value": "Your co-op role is committed after contributing an order." }
+    ,{ "Key": "roles.set", "Value": "Co-op role set: {0}." }
+    ,{ "Key": "roles.current.none", "Value": "YOUR CO-OP ROLE: UNASSIGNED — hold Shift and press 1, 2, or 3 to choose." }
+    ,{ "Key": "roles.current", "Value": "YOUR CO-OP ROLE: {0} — {1} matching order contribution(s)." }
+    ,{ "Key": "roles.order_recommended", "Value": "Best co-op role: {0}" }
+    ,{ "Key": "roles.teamwork_bonus", "Value": "Teamwork complete: +${0} shared bonus." }
+    ,{ "Key": "roles.order_teamwork_bonus", "Value": "Order delivered: +${0}. All three co-op roles contributed today: +${1} teamwork bonus." }
+    ,{ "Key": "community.unlock.elara", "Value": "Elara's Seed Share: seed packs include +1 seed." }
+    ,{ "Key": "community.unlock.bram", "Value": "Bram's Pond Tip: the pond allows +1 catch per day." }
+    ,{ "Key": "community.unlock.niko", "Value": "Niko's Workshop Shelf: the workbench queue gains +1 slot." }
+    ,{ "Key": "community.perks.active", "Value": "\nNEIGHBOR PERKS: {0}" }
+    ,{ "Key": "forecast.tomorrow", "Value": "TOMORROW: {0}" }
+    ,{ "Key": "forecast.plan.rain", "Value": "Rainy Forage: tomorrow's dusk mushroom route gains +1 item and costs 2 less Energy." }
+    ,{ "Key": "forecast.plan.clear", "Value": "Sunrise Walk: tomorrow's clear-morning wildflower route gains +1 item and costs 2 less Energy." }
+    ,{ "Key": "forecast.plan.cloudy", "Value": "Cloudy Timber Walk: tomorrow's afternoon wood route gains +1 item and costs 2 less Energy." }
+    ,{ "Key": "forecast.plan.unavailable", "Value": "No route preparation is available for that forecast." }
+    ,{ "Key": "forecast.plan.active", "Value": "PREPARED: {0}" }
+    ,{ "Key": "forecast.plan.button", "Value": "PREPARE TOMORROW'S ROUTE" }
+    ,{ "Key": "forecast.plan.confirmed", "Value": "Forecast plan prepared: {0}." }
+    ,{ "Key": "rest.button", "Value": "PREPARE EVENING TEA" }
+    ,{ "Key": "rest.prepared", "Value": "Evening Tea prepared. Tomorrow begins with 3 Comfort charges." }
+    ,{ "Key": "rest.already_prepared", "Value": "The homestead is already prepared for tomorrow." }
+    ,{ "Key": "rest.tea_missing", "Value": "You need Wildflower Tea for an evening tea." }
+    ,{ "Key": "rest.status.prepared", "Value": "EVENING PLAN: Comfort prepared. Tomorrow's next 3 Energy costs are reduced by 1." }
+    ,{ "Key": "rest.morning_bonus", "Value": " Evening Tea is ready: the next 3 Energy costs are reduced by 1." }
+    ,{ "Key": "hud.energy.comfort", "Value": "  •  COMFORT {0}" }
+    ,{ "Key": "evening.status.route", "Value": "EVENING PLAN: {0}" }
+    ,{ "Key": "evening.status.none", "Value": "EVENING PLAN: Choose Comfort at the bed or prepare tomorrow's route in the Planner." }
+    ,{ "Key": "evening.choice.comfort_active", "Value": "Tomorrow is already prepared for comfort. Choose one evening preparation per farm." }
+    ,{ "Key": "evening.choice.route_active", "Value": "Tomorrow's route is already prepared. Choose one evening preparation per farm." }
+  ]
+}

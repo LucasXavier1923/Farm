@@ -1,0 +1,74 @@
+using FarmPrototype.Farming;
+using UnityEngine;
+
+namespace FarmPrototype.Player
+{
+    public sealed class FarmEquipmentController : MonoBehaviour
+    {
+        [SerializeField] private GameObject hoe;
+        [SerializeField] private GameObject seeds;
+        [SerializeField] private GameObject wateringCan;
+
+        private FarmTestPlot plot;
+        private FarmPlayerOwnership ownership;
+        private FarmTool visibleTool = (FarmTool)(-1);
+
+        private void Start()
+        {
+            ownership = GetComponent<FarmPlayerOwnership>();
+            if (ownership == null) ownership = gameObject.AddComponent<FarmPlayerOwnership>();
+            var animator = GetComponent<Animator>();
+            var hand = animator != null ? animator.GetBoneTransform(HumanBodyBones.RightHand) : null;
+            if (hand == null)
+            {
+                Debug.LogError("RightHand not found on Animator.", this);
+                return;
+            }
+
+            Attach(hoe, hand, new Vector3(0.05f, 0f, 0f), new Vector3(10f, 90f, 80f));
+            Attach(seeds, hand, Vector3.zero, new Vector3(0f, 90f, 0f));
+            Attach(wateringCan, hand, new Vector3(0.03f, 0f, 0f), new Vector3(0f, 90f, 70f));
+            FindPlot();
+            RefreshEquipment(true);
+        }
+
+        private void Update()
+        {
+            if (plot == null) FindPlot();
+            RefreshEquipment(false);
+        }
+
+        private void FindPlot() => plot = Object.FindAnyObjectByType<FarmTestPlot>();
+
+        private void RefreshEquipment(bool force)
+        {
+            if (ownership != null && !ownership.IsLocallyControlled)
+            {
+                visibleTool = FarmTool.None;
+                SetActive(hoe, false);
+                SetActive(seeds, false);
+                SetActive(wateringCan, false);
+                return;
+            }
+            var requested = plot != null ? plot.ActiveTool : FarmTool.None;
+            if (!force && requested == visibleTool) return;
+            visibleTool = requested;
+            SetActive(hoe, requested == FarmTool.Hoe);
+            SetActive(seeds, requested == FarmTool.Seeds);
+            SetActive(wateringCan, requested == FarmTool.WateringCan);
+        }
+
+        private static void SetActive(GameObject target, bool value)
+        {
+            if (target != null) target.SetActive(value);
+        }
+
+        private static void Attach(GameObject target, Transform hand, Vector3 localPosition, Vector3 localRotation)
+        {
+            if (target == null) return;
+            target.transform.SetParent(hand, false);
+            target.transform.localPosition = localPosition;
+            target.transform.localRotation = Quaternion.Euler(localRotation);
+        }
+    }
+}

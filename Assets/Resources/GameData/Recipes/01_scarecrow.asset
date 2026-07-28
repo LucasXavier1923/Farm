@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f70fa19b7cace7478de183aa7fe5c0b, type: 3}
+  m_Name: 01_scarecrow
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.CraftingRecipe
+  Id: 01_scarecrow
+  DisplayName: Kit de espantalho
+  Description: "Protege uma pequena \xE1rea de cultivo."
+  Ingredients:
+  - Item: {fileID: 11400000, guid: de72e3b5ee9f8a9498374f5c7004b102, type: 2}
+    Quantity: 6
+  - Item: {fileID: 11400000, guid: 905c03e34228c1542a72e07c5fc21490, type: 2}
+    Quantity: 2
+  OutputItem: {fileID: 11400000, guid: 59760eba452bb4047821f9c5e63e12b9, type: 2}
+  OutputQuantity: 1
+  PreviewPrefab: {fileID: 1436178878525030, guid: 3a287a372b456e84895c52a36198429c, type: 3}

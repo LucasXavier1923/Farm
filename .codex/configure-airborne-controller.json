@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var controller = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(\"Assets/_Project/Animations/PlayerLocomotion.controller\"); var stateMachine = controller.layers[0].stateMachine; var hasAirborne = false; foreach (var parameter in controller.parameters) if (parameter.name == \"Airborne\") hasAirborne = true; if (!hasAirborne) controller.AddParameter(\"Airborne\", AnimatorControllerParameterType.Bool); UnityEditor.Animations.AnimatorState idleState = null; UnityEditor.Animations.AnimatorState jumpState = null; foreach (var childState in stateMachine.states) { if (childState.state.name == \"Idle\") idleState = childState.state; if (childState.state.name == \"Jump\") jumpState = childState.state; } if (idleState == null || jumpState == null) throw new System.Exception(\"Idle or Jump state is missing.\"); foreach (var transition in jumpState.transitions) jumpState.RemoveTransition(transition); var finishJump = jumpState.AddTransition(idleState); finishJump.hasExitTime = false; finishJump.duration = 0.08f; finishJump.AddCondition(UnityEditor.Animations.AnimatorConditionMode.IfNot, 0f, \"Airborne\"); EditorUtility.SetDirty(controller); AssetDatabase.SaveAssets(); Debug.Log(\"[FarmAnimation] Jump now waits for ground contact.\");",
+  "className": "ConfigureAirborneController",
+  "methodName": "Execute",
+  "parameters": [],
+  "isMethodBody": true
+}

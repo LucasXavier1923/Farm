@@ -1,0 +1,6 @@
+{
+  "maxEntries": 100,
+  "logTypeFilter": "Warning",
+  "includeStackTrace": true,
+  "lastMinutes": 1
+}

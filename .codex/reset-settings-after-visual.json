@@ -1,0 +1,1 @@
+{"csharpCode":"var menu=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmSettingsMenu>();FarmPrototype.Farming.FarmSettings.ResetDefaults();if(menu!=null)menu.SetOpen(false);UnityEngine.Debug.Log(\"[SETTINGS_VISUAL_CLEANUP_OK] defaults restored | menu closed\");","className":"ResetSettingsAfterVisual","methodName":"Run","parameters":[],"isMethodBody":true}

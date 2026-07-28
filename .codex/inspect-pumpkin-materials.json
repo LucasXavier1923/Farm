@@ -1,0 +1,7 @@
+{
+  "csharpCode": "string[] paths = { \"Assets/Resources/FarmCrops/Pumpkin_S.fbx\", \"Assets/Resources/FarmCrops/Pumpkin_M.fbx\", \"Assets/Resources/FarmCrops/Pumpkin_L.fbx\" }; foreach (var path in paths) { var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(path); if (prefab == null) { UnityEngine.Debug.LogError(\"[ABOBORA_MATERIAL] FBX não encontrado: \" + path); continue; } var renderers = prefab.GetComponentsInChildren<UnityEngine.Renderer>(true); foreach (var renderer in renderers) { foreach (var material in renderer.sharedMaterials) { if (material == null) { UnityEngine.Debug.LogError(\"[ABOBORA_MATERIAL] Material ausente em \" + path + \" / \" + renderer.name); continue; } var texture = material.mainTexture; var color = material.HasProperty(\"_BaseColor\") ? material.GetColor(\"_BaseColor\") : (material.HasProperty(\"_Color\") ? material.GetColor(\"_Color\") : UnityEngine.Color.clear); UnityEngine.Debug.Log(\"[ABOBORA_MATERIAL] \" + System.IO.Path.GetFileName(path) + \" | Renderer=\" + renderer.name + \" | Material=\" + material.name + \" | Shader=\" + (material.shader == null ? \"NULL\" : material.shader.name) + \" | Textura=\" + (texture == null ? \"NULL\" : texture.name) + \" | Cor=\" + color); } } }",
+  "className": "PumpkinMaterialInspection",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); if (!plot.GameState.IsPickupCollected(\"modal_pause_test\")) throw new System.Exception(\"Pickup nao retomou apos fechar modal\"); plot.GameState.Restore(new FarmPrototype.Farming.FarmSaveData { Version = 6, Money = 100, PumpkinSeeds = 12, Pumpkins = 0, Tutorial = new FarmPrototype.Farming.FarmTutorialProgress(), Storage = new System.Collections.Generic.List<FarmPrototype.Farming.InventoryStack>(), CollectedPickupIds = new System.Collections.Generic.List<string>() }); plot.RebuildWorldPickups(); UnityEngine.Debug.Log(\"[PICKUP_MODAL_RESUME_OK] coleta retomada\");",
+  "className": "FarmPickupV6ModalStep3",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

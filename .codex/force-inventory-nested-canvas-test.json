@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); UnityEngine.Transform window = null; foreach (var item in hud.GetComponentsInChildren<UnityEngine.Transform>(true)) if (item.name == \"InventoryWindow\") window = item; if (window == null) throw new System.Exception(\"InventoryWindow ausente\"); var nested = window.GetComponent<UnityEngine.Canvas>(); if (nested == null) nested = window.gameObject.AddComponent<UnityEngine.Canvas>(); nested.overrideSorting = true; nested.sortingOrder = 110; if (window.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null) window.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>(); window.gameObject.SetActive(true); UnityEngine.Canvas.ForceUpdateCanvases();",
+  "className": "ForceInventoryNestedCanvasTest",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

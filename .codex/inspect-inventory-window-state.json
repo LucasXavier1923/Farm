@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); if (hud == null) throw new System.Exception(\"HUD ausente\"); UnityEngine.Transform window = null; UnityEngine.Transform backpack = null; foreach (var item in hud.GetComponentsInChildren<UnityEngine.Transform>(true)) { if (item.name == \"InventoryWindow\") window = item; if (item.name == \"Backpack\") backpack = item; } if (window == null || backpack == null) throw new System.Exception(\"Janela ou mochila ausente\"); var windowImage = window.GetComponent<UnityEngine.UI.Image>(); var backpackImage = backpack.GetComponent<UnityEngine.UI.Image>(); UnityEngine.Debug.Log(\"[FARM_INVENTORY_WINDOW_STATE] open=\" + hud.IsInventoryOpen + \" active=\" + window.gameObject.activeInHierarchy + \" windowPos=\" + window.position + \" windowSize=\" + ((UnityEngine.RectTransform)window).rect.size + \" windowColor=\" + windowImage.color + \" windowCull=\" + window.GetComponent<UnityEngine.CanvasRenderer>().cull + \" backpackPos=\" + backpack.position + \" backpackSize=\" + ((UnityEngine.RectTransform)backpack).rect.size + \" backpackColor=\" + backpackImage.color + \" backpackCull=\" + backpack.GetComponent<UnityEngine.CanvasRenderer>().cull + \" sibling=\" + window.GetSiblingIndex());",
+  "className": "InspectInventoryWindowState",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

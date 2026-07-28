@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); if (plot == null) throw new System.Exception(\"FarmTestPlot ausente\"); if (plot.GameState == null) throw new System.Exception(\"FarmGameState ausente\"); if (UnityEngine.GameObject.Find(\"Farm_UI\") == null) throw new System.Exception(\"Farm_UI ausente\"); if (UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null) throw new System.Exception(\"EventSystem ausente\"); if (!FarmPrototype.Farming.FarmSaveSystem.TryLoad(out var data, out var error)) throw new System.Exception(\"Falha ao carregar save: \" + error); if (data.Version != 2) throw new System.Exception(\"Save nao esta na versao 2: \" + data.Version); if (data.Inventory == null || data.Inventory.Count == 0) throw new System.Exception(\"Inventario v2 vazio ou ausente\"); if (plot.GameState.SlotCapacity != 20) throw new System.Exception(\"Quantidade de slots incorreta: \" + plot.GameState.SlotCapacity); UnityEngine.Debug.Log(\"[FARM_V2_CLEAN_START_OK] save v2 | inventario \" + data.Inventory.Count + \" stack(s) | 20 slots | Canvas + EventSystem\");",
+  "className": "FarmV2CleanStartValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

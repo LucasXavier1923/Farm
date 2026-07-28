@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var tileType = System.AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => { try { return a.GetTypes(); } catch { return System.Array.Empty<System.Type>(); } }).FirstOrDefault(t => t.Name == \"FarmTestTile\"); if (tileType == null) throw new System.Exception(\"FarmTestTile não encontrado\"); var tiles = UnityEngine.Object.FindObjectsByType(tileType, UnityEngine.FindObjectsSortMode.None); UnityEngine.Component target = null; foreach (var item in tiles) { var component = item as UnityEngine.Component; if (component != null && component.transform.childCount > 0) { target = component; break; } } if (target == null) throw new System.Exception(\"Nenhuma plantação visual foi criada\"); var stateField = tileType.GetField(\"state\", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic); var state = stateField == null ? \"campo-indisponível\" : stateField.GetValue(target).ToString(); var children = new System.Collections.Generic.List<string>(); for (int i = 0; i < target.transform.childCount; i++) children.Add(target.transform.GetChild(i).name); UnityEngine.Debug.Log(\"[VALIDACAO_CRESCIMENTO] Estado=\" + state + \" | Visuais=\" + string.Join(\",\", children));",
+  "className": "PumpkinGrowthValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

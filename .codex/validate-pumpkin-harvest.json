@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var tileType = System.AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => { try { return a.GetTypes(); } catch { return System.Array.Empty<System.Type>(); } }).FirstOrDefault(t => t.Name == \"FarmTestTile\"); if (tileType == null) throw new System.Exception(\"FarmTestTile não encontrado\"); var use = tileType.GetMethod(\"Use\", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public); var toolType = use.GetParameters()[0].ParameterType; foreach (var item in UnityEngine.Object.FindObjectsByType(tileType, UnityEngine.FindObjectsSortMode.None)) { var tile = item as UnityEngine.Component; var stateField = tileType.GetField(\"state\", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic); if (tile != null && stateField != null && stateField.GetValue(tile).ToString() == \"Ready\") { var result = use.Invoke(tile, new object[] { System.Enum.Parse(toolType, \"Harvest\") }); UnityEngine.Debug.Log(\"[VALIDACAO_COLHEITA] \" + result); return; } } throw new System.Exception(\"Nenhuma abóbora pronta para colher\");",
+  "className": "PumpkinHarvestValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

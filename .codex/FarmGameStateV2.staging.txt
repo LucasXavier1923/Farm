@@ -1,0 +1,239 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    [Serializable]
+    public sealed class InventoryStack
+    {
+        public string ItemId;
+        public int Quantity;
+
+        public InventoryStack() { }
+        public InventoryStack(string itemId, int quantity)
+        {
+            ItemId = itemId;
+            Quantity = quantity;
+        }
+    }
+
+    [Serializable]
+    public sealed class FarmTileSaveData
+    {
+        public int Index;
+        public int State;
+        public string CropId;
+        public float GrowthSecondsRemaining;
+    }
+
+    [Serializable]
+    public sealed class FarmSaveData
+    {
+        public int Version = 2;
+        public int Money;
+        public List<InventoryStack> Inventory = new();
+        public List<FarmTileSaveData> Tiles = new();
+
+        // Campos legados mantidos para migração de saves da versão 1.
+        public int PumpkinSeeds;
+        public int Pumpkins;
+    }
+
+    public sealed class FarmGameState : MonoBehaviour
+    {
+        public const string PumpkinSeedId = "pumpkin_seed";
+        public const string PumpkinId = "pumpkin";
+
+        [SerializeField] private int money = 100;
+        [SerializeField, Min(1)] private int slotCapacity = 20;
+        [SerializeField] private List<InventoryStack> inventory = new();
+
+        public int Money => money;
+        public int SlotCapacity => slotCapacity;
+        public int UsedSlots => inventory.Count;
+        public IReadOnlyList<InventoryStack> Inventory => inventory;
+        public int PumpkinSeeds => GetQuantity(PumpkinSeedId);
+        public int Pumpkins => GetQuantity(PumpkinId);
+        public event Action Changed;
+
+        private void Awake()
+        {
+            if (inventory.Count == 0) AddInternal(PumpkinSeedId, 12);
+        }
+
+        public int GetQuantity(string itemId)
+        {
+            var total = 0;
+            foreach (var stack in inventory)
+                if (string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) total += stack.Quantity;
+            return total;
+        }
+
+        public bool CanAdd(string itemId, int amount)
+        {
+            if (amount <= 0) return true;
+            var item = FarmContentDatabase.GetItem(itemId);
+            var maxStack = item != null ? Mathf.Max(1, item.MaxStack) : 99;
+            var free = (slotCapacity - inventory.Count) * maxStack;
+            foreach (var stack in inventory)
+                if (string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) free += maxStack - stack.Quantity;
+            return free >= amount;
+        }
+
+        public bool AddItem(string itemId, int amount)
+        {
+            if (string.IsNullOrWhiteSpace(itemId) || amount <= 0 || !CanAdd(itemId, amount)) return false;
+            AddInternal(itemId, amount);
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TryRemoveItem(string itemId, int amount)
+        {
+            if (amount <= 0) return true;
+            if (GetQuantity(itemId) < amount) return false;
+
+            for (var index = inventory.Count - 1; index >= 0 && amount > 0; index--)
+            {
+                var stack = inventory[index];
+                if (!string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) continue;
+                var removed = Mathf.Min(stack.Quantity, amount);
+                stack.Quantity -= removed;
+                amount -= removed;
+                if (stack.Quantity <= 0) inventory.RemoveAt(index);
+            }
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TrySellAll(CropDefinition crop, out int quantity, out int earned)
+        {
+            quantity = crop != null && crop.HarvestItem != null ? GetQuantity(crop.HarvestItem.Id) : 0;
+            var unitPrice = crop != null && crop.HarvestItem != null ? crop.HarvestItem.BaseSellPrice : 0;
+            earned = quantity * unitPrice;
+            if (quantity <= 0 || !TryRemoveItem(crop.HarvestItem.Id, quantity)) return false;
+            money += earned;
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TryBuySeedPack(CropDefinition crop, out int amount, out int cost)
+        {
+            amount = crop != null ? crop.SeedPackAmount : 0;
+            cost = crop != null ? crop.SeedPackPrice : 0;
+            if (crop == null || crop.SeedItem == null || amount <= 0 || money < cost || !CanAdd(crop.SeedItem.Id, amount)) return false;
+            money -= cost;
+            AddInternal(crop.SeedItem.Id, amount);
+            NotifyChanged();
+            return true;
+        }
+
+        // Compatibilidade temporária com os testes e chamadas do protótipo anterior.
+        public bool TryConsumePumpkinSeed() => TryRemoveItem(PumpkinSeedId, 1);
+        public void AddPumpkins(int amount) => AddItem(PumpkinId, amount);
+        public bool TrySellAllPumpkins(out int quantity, out int earned) =>
+            TrySellAll(FarmContentDatabase.GetCrop(PumpkinId), out quantity, out earned);
+        public bool TryBuyPumpkinSeedPack(out int amount, out int cost) =>
+            TryBuySeedPack(FarmContentDatabase.GetCrop(PumpkinId), out amount, out cost);
+
+        public FarmSaveData CreateSaveData(List<FarmTileSaveData> tiles)
+        {
+            var stacks = new List<InventoryStack>(inventory.Count);
+            foreach (var stack in inventory) stacks.Add(new InventoryStack(stack.ItemId, stack.Quantity));
+            return new FarmSaveData
+            {
+                Version = 2,
+                Money = money,
+                Inventory = stacks,
+                Tiles = tiles ?? new List<FarmTileSaveData>(),
+                PumpkinSeeds = PumpkinSeeds,
+                Pumpkins = Pumpkins
+            };
+        }
+
+        public void Restore(FarmSaveData data)
+        {
+            if (data == null) return;
+            money = Mathf.Max(0, data.Money);
+            inventory.Clear();
+
+            if (data.Version >= 2 && data.Inventory != null && data.Inventory.Count > 0)
+            {
+                foreach (var stack in data.Inventory)
+                    if (stack != null && stack.Quantity > 0 && !string.IsNullOrWhiteSpace(stack.ItemId))
+                        AddInternal(stack.ItemId, stack.Quantity);
+            }
+            else
+            {
+                if (data.PumpkinSeeds > 0) AddInternal(PumpkinSeedId, data.PumpkinSeeds);
+                if (data.Pumpkins > 0) AddInternal(PumpkinId, data.Pumpkins);
+            }
+            NotifyChanged();
+        }
+
+        private void AddInternal(string itemId, int amount)
+        {
+            var item = FarmContentDatabase.GetItem(itemId);
+            var maxStack = item != null ? Mathf.Max(1, item.MaxStack) : 99;
+            foreach (var stack in inventory)
+            {
+                if (!string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase) || stack.Quantity >= maxStack) continue;
+                var moved = Mathf.Min(maxStack - stack.Quantity, amount);
+                stack.Quantity += moved;
+                amount -= moved;
+                if (amount <= 0) return;
+            }
+
+            while (amount > 0 && inventory.Count < slotCapacity)
+            {
+                var moved = Mathf.Min(maxStack, amount);
+                inventory.Add(new InventoryStack(itemId, moved));
+                amount -= moved;
+            }
+        }
+
+        private void NotifyChanged() => Changed?.Invoke();
+    }
+
+    public static class FarmSaveSystem
+    {
+        private const string SaveFileName = "farm-prototype-save.json";
+        public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+
+        public static bool Save(FarmSaveData data, out string error)
+        {
+            try
+            {
+                File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
+                error = null;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                return false;
+            }
+        }
+
+        public static bool TryLoad(out FarmSaveData data, out string error)
+        {
+            data = null;
+            error = null;
+            try
+            {
+                if (!File.Exists(SavePath)) return false;
+                data = JsonUtility.FromJson<FarmSaveData>(File.ReadAllText(SavePath));
+                if (data != null) return true;
+                error = "O arquivo de save est\u00E1 vazio ou inv\u00E1lido.";
+                return false;
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                return false;
+            }
+        }
+    }
+}

@@ -1,0 +1,400 @@
+using System;
+using System.Text;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
+
+namespace FarmPrototype.Farming
+{
+    public sealed class FarmHudController : MonoBehaviour
+    {
+        private static readonly Color PanelColor = new(0.06f, 0.08f, 0.055f, 0.92f);
+        private static readonly Color AccentColor = new(0.95f, 0.67f, 0.18f, 1f);
+        private static readonly Color SlotColor = new(0.12f, 0.15f, 0.10f, 0.96f);
+        private static readonly Color SelectedSlotColor = new(0.42f, 0.27f, 0.06f, 1f);
+        private static readonly Color EmptySlotColor = new(0.08f, 0.10f, 0.075f, 0.82f);
+
+        private FarmTestPlot plot;
+        private Font font;
+        private Canvas canvas;
+        private Text resourcesText;
+        private Text toolText;
+        private Text promptText;
+        private Text feedbackText;
+        private Text saveText;
+        private Text inventorySummaryText;
+        private Text shopInfoText;
+        private GameObject shopPanel;
+        private Button sellButton;
+        private Button buyButton;
+        private GameObject inventoryWindow;
+        private Text inventoryCapacityText;
+        private readonly GameObject[] inventorySlots = new GameObject[20];
+        private readonly Image[] inventorySlotBackgrounds = new Image[20];
+        private readonly Text[] inventoryIcons = new Text[20];
+        private readonly Text[] inventoryNames = new Text[20];
+        private readonly Text[] inventoryCounts = new Text[20];
+        private readonly Image[] hotbarSlots = new Image[FarmGameState.HotbarSlotCount];
+        private readonly Text[] hotbarIcons = new Text[FarmGameState.HotbarSlotCount];
+        private readonly Text[] hotbarLabels = new Text[FarmGameState.HotbarSlotCount];
+        private readonly Text[] hotbarCounts = new Text[FarmGameState.HotbarSlotCount];
+        private GameObject dragGhost;
+        private Text dragGhostIcon;
+        private Text dragGhostLabel;
+        private string draggedItemId;
+        private bool inventoryOpen;
+
+        public static bool IsModalOpen { get; private set; }
+        public bool IsInventoryOpen => inventoryOpen;
+        public string DraggedItemId => draggedItemId;
+
+        public void Initialize(FarmTestPlot owner)
+        {
+            plot = owner;
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            CreateInterface();
+        }
+
+        private void OnDisable()
+        {
+            if (inventoryOpen) IsModalOpen = false;
+        }
+
+        private void OnDestroy()
+        {
+            if (inventoryOpen) IsModalOpen = false;
+        }
+
+        private void Update()
+        {
+            HandleInventoryInput();
+            if (plot == null) plot = GetComponent<FarmTestPlot>();
+            if (plot == null || plot.GameState == null || plot.ActiveCrop == null || !InterfaceReady()) return;
+
+            var state = plot.GameState;
+            var crop = plot.ActiveCrop;
+            resourcesText.text = $"${state.Money}    Sementes: {state.GetQuantity(crop.SeedItem.Id)}    {crop.DisplayName}: {state.GetQuantity(crop.HarvestItem.Id)}";
+            toolText.text = $"Selecionado: {plot.ActiveToolDisplayName}";
+            promptText.text = inventoryOpen ? "Invent\u00E1rio aberto \u2014 arraste itens para a barra r\u00E1pida" : plot.CurrentPrompt;
+            feedbackText.text = plot.Feedback;
+            saveText.text = $"I/Tab invent\u00E1rio  \u2022  F5 salvar  \u2022  F9 carregar    {plot.SaveStatus}";
+            inventorySummaryText.text = BuildInventorySummary(state);
+            RefreshInventory(state);
+            RefreshHotbar(state);
+
+            shopPanel.SetActive(!inventoryOpen && plot.ShopVisible);
+            if (!inventoryOpen && plot.ShopVisible)
+            {
+                shopInfoText.text = $"{crop.SeedPackAmount} sementes: ${crop.SeedPackPrice}\nVenda: ${crop.HarvestItem.BaseSellPrice} por {crop.DisplayName.ToLowerInvariant()}";
+                sellButton.interactable = plot.ShopInRange;
+                buyButton.interactable = plot.ShopInRange;
+            }
+        }
+
+        public void ToggleInventory() => SetInventoryOpen(!inventoryOpen);
+
+        public void SetInventoryOpen(bool value)
+        {
+            inventoryOpen = value;
+            IsModalOpen = value;
+            if (inventoryWindow != null) inventoryWindow.SetActive(value);
+            if (!value) EndItemDrag();
+        }
+
+        public void BeginItemDrag(string itemId, Vector2 screenPosition)
+        {
+            if (!inventoryOpen || plot == null || plot.GameState.GetQuantity(itemId) <= 0) return;
+            draggedItemId = itemId;
+            var definition = FarmContentDatabase.GetItem(itemId);
+            dragGhostIcon.text = IconLetter(definition);
+            dragGhostIcon.color = IconColor(definition);
+            dragGhostLabel.text = definition != null ? definition.DisplayName : itemId;
+            dragGhost.SetActive(true);
+            UpdateItemDrag(screenPosition);
+        }
+
+        public void UpdateItemDrag(Vector2 screenPosition)
+        {
+            if (dragGhost == null || !dragGhost.activeSelf) return;
+            dragGhost.GetComponent<RectTransform>().position = screenPosition + new Vector2(22f, -22f);
+        }
+
+        public void CompleteItemDrag(int hotbarIndex)
+        {
+            if (!string.IsNullOrEmpty(draggedItemId)) plot?.AssignItemToHotbar(hotbarIndex, draggedItemId);
+            EndItemDrag();
+        }
+
+        public void EndItemDrag()
+        {
+            draggedItemId = null;
+            if (dragGhost != null) dragGhost.SetActive(false);
+        }
+
+        public void SelectHotbarSlot(int index) => plot?.SelectHotbarSlot(index);
+        public void ClearHotbarSlot(int index) => plot?.ClearHotbarSlot(index);
+        public bool AssignItemToHotbar(int index, string itemId) => plot != null && plot.AssignItemToHotbar(index, itemId);
+
+        private void HandleInventoryInput()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+            if (keyboard.iKey.wasPressedThisFrame || keyboard.tabKey.wasPressedThisFrame) ToggleInventory();
+            else if (inventoryOpen && keyboard.escapeKey.wasPressedThisFrame) SetInventoryOpen(false);
+        }
+
+        private void RefreshInventory(FarmGameState state)
+        {
+            inventoryCapacityText.text = $"MOCHILA  {state.UsedSlots}/{state.SlotCapacity} slots";
+            for (var index = 0; index < inventorySlots.Length; index++)
+            {
+                var occupied = index < state.Inventory.Count;
+                var stack = occupied ? state.Inventory[index] : null;
+                var definition = occupied ? FarmContentDatabase.GetItem(stack.ItemId) : null;
+                inventorySlotBackgrounds[index].color = occupied ? SlotColor : EmptySlotColor;
+                inventoryIcons[index].text = occupied ? IconLetter(definition) : string.Empty;
+                inventoryIcons[index].color = IconColor(definition);
+                inventoryNames[index].text = occupied ? (definition != null ? definition.DisplayName : stack.ItemId) : "Vazio";
+                inventoryNames[index].color = occupied ? Color.white : new Color(0.48f, 0.52f, 0.45f);
+                inventoryCounts[index].text = occupied ? $"x{stack.Quantity}" : string.Empty;
+                inventorySlots[index].GetComponent<FarmInventorySlotView>().Initialize(this, occupied ? stack.ItemId : null);
+            }
+        }
+
+        private void RefreshHotbar(FarmGameState state)
+        {
+            for (var index = 0; index < FarmGameState.HotbarSlotCount; index++)
+            {
+                var entry = state.GetHotbarEntry(index);
+                ResolveEntry(entry, state, out var icon, out var label, out var count, out var color);
+                hotbarSlots[index].color = index == state.SelectedHotbarIndex ? SelectedSlotColor : (string.IsNullOrEmpty(entry) ? EmptySlotColor : SlotColor);
+                hotbarIcons[index].text = icon;
+                hotbarIcons[index].color = color;
+                hotbarLabels[index].text = $"{index + 1}  {label}";
+                hotbarCounts[index].text = count;
+            }
+        }
+
+        private static void ResolveEntry(string entry, FarmGameState state, out string icon, out string label, out string count, out Color color)
+        {
+            icon = "+";
+            label = "VAZIO";
+            count = string.Empty;
+            color = new Color(0.45f, 0.48f, 0.42f);
+            if (string.IsNullOrEmpty(entry)) return;
+            if (entry.StartsWith(FarmGameState.ItemPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var itemId = entry[FarmGameState.ItemPrefix.Length..];
+                var definition = FarmContentDatabase.GetItem(itemId);
+                icon = IconLetter(definition);
+                label = definition != null ? ShortName(definition.DisplayName) : itemId.ToUpperInvariant();
+                count = $"x{state.GetQuantity(itemId)}";
+                color = IconColor(definition);
+                return;
+            }
+
+            var toolId = entry.StartsWith(FarmGameState.ToolPrefix, StringComparison.OrdinalIgnoreCase) ? entry[FarmGameState.ToolPrefix.Length..] : entry;
+            if (toolId == "hoe") { icon = "E"; label = "ENXADA"; color = new Color(0.88f, 0.62f, 0.27f); }
+            else if (toolId == "watering_can") { icon = "R"; label = "REGADOR"; color = new Color(0.35f, 0.72f, 0.95f); }
+            else if (toolId == "harvest") { icon = "C"; label = "COLHER"; color = new Color(0.55f, 0.88f, 0.42f); }
+        }
+
+        private static string ShortName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return "ITEM";
+            var firstSpace = value.IndexOf(' ');
+            return (firstSpace > 0 ? value[..firstSpace] : value).ToUpperInvariant();
+        }
+
+        private static string IconLetter(ItemDefinition definition) => definition == null ? "?" : definition.Category switch
+        {
+            ItemCategory.Seed => "S",
+            ItemCategory.Crop => "P",
+            ItemCategory.Tool => "F",
+            ItemCategory.Material => "M",
+            _ => "?"
+        };
+
+        private static Color IconColor(ItemDefinition definition) => definition == null ? Color.white : definition.Category switch
+        {
+            ItemCategory.Seed => new Color(0.95f, 0.76f, 0.25f),
+            ItemCategory.Crop => new Color(0.96f, 0.48f, 0.18f),
+            ItemCategory.Tool => new Color(0.48f, 0.72f, 0.92f),
+            ItemCategory.Material => new Color(0.70f, 0.62f, 0.48f),
+            _ => Color.white
+        };
+
+        private static string BuildInventorySummary(FarmGameState state)
+        {
+            var builder = new StringBuilder("MOCHILA\n");
+            if (state.Inventory.Count == 0) return builder.Append("Vazia\n\nI para abrir").ToString();
+            foreach (var stack in state.Inventory)
+            {
+                var definition = FarmContentDatabase.GetItem(stack.ItemId);
+                builder.Append("\u2022 ").Append(definition != null ? definition.DisplayName : stack.ItemId).Append("  x").Append(stack.Quantity).Append('\n');
+            }
+            builder.Append("\n").Append(state.UsedSlots).Append('/').Append(state.SlotCapacity).Append(" slots  \u2022  I abrir");
+            return builder.ToString();
+        }
+
+        private bool InterfaceReady()
+        {
+            if (resourcesText == null || toolText == null || promptText == null || feedbackText == null || saveText == null || inventorySummaryText == null || shopInfoText == null || shopPanel == null || inventoryWindow == null) return false;
+            foreach (var slot in hotbarSlots) if (slot == null) return false;
+            return true;
+        }
+
+        private void CreateInterface()
+        {
+            EnsureEventSystem();
+            var root = new GameObject("Farm_UI");
+            root.transform.SetParent(transform, false);
+            canvas = root.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            var scaler = root.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            root.AddComponent<GraphicRaycaster>();
+
+            var statusPanel = CreatePanel("Status", root.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -18f), new Vector2(630f, 194f), new Vector2(0f, 1f), PanelColor);
+            CreateText("Title", statusPanel.transform, "FAZENDA", 24, FontStyle.Bold, AccentColor, new Vector2(18f, -12f), new Vector2(590f, 30f));
+            resourcesText = CreateText("Resources", statusPanel.transform, "", 21, FontStyle.Bold, Color.white, new Vector2(18f, -48f), new Vector2(590f, 28f));
+            toolText = CreateText("Tool", statusPanel.transform, "", 18, FontStyle.Normal, Color.white, new Vector2(18f, -78f), new Vector2(590f, 25f));
+            promptText = CreateText("Prompt", statusPanel.transform, "", 17, FontStyle.Normal, new Color(0.85f, 0.92f, 0.75f), new Vector2(18f, -108f), new Vector2(590f, 25f));
+            feedbackText = CreateText("Feedback", statusPanel.transform, "", 17, FontStyle.Bold, AccentColor, new Vector2(18f, -137f), new Vector2(590f, 25f));
+            saveText = CreateText("Save", statusPanel.transform, "", 14, FontStyle.Normal, new Color(0.7f, 0.74f, 0.68f), new Vector2(18f, -166f), new Vector2(590f, 22f));
+
+            var summaryPanel = CreatePanel("InventorySummary", root.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -18f), new Vector2(325f, 245f), new Vector2(1f, 1f), PanelColor);
+            inventorySummaryText = CreateText("InventorySummaryText", summaryPanel.transform, "", 17, FontStyle.Normal, Color.white, new Vector2(18f, -16f), new Vector2(290f, 215f));
+
+            CreateHotbar(root.transform);
+            CreateInventoryWindow(root.transform);
+
+            shopPanel = CreatePanel("Shop", root.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(430f, 205f), new Vector2(0.5f, 0.5f), PanelColor);
+            CreateText("ShopTitle", shopPanel.transform, "CAIXOTE DE COM\u00C9RCIO", 23, FontStyle.Bold, AccentColor, new Vector2(20f, -16f), new Vector2(390f, 30f), TextAnchor.MiddleCenter);
+            shopInfoText = CreateText("ShopInfo", shopPanel.transform, "", 17, FontStyle.Normal, Color.white, new Vector2(20f, -55f), new Vector2(390f, 55f), TextAnchor.MiddleCenter);
+            sellButton = CreateButton("Sell", shopPanel.transform, "VENDER TUDO", new Vector2(20f, -128f), new Vector2(185f, 52f));
+            buyButton = CreateButton("Buy", shopPanel.transform, "COMPRAR SEMENTES", new Vector2(225f, -128f), new Vector2(185f, 52f));
+            sellButton.onClick.AddListener(plot.RequestSell);
+            buyButton.onClick.AddListener(plot.RequestBuySeeds);
+            shopPanel.SetActive(false);
+        }
+
+        private void CreateHotbar(Transform root)
+        {
+            var hotbar = CreatePanel("Hotbar", root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 22f), new Vector2(850f, 104f), new Vector2(0.5f, 0f), PanelColor);
+            for (var index = 0; index < FarmGameState.HotbarSlotCount; index++)
+            {
+                var slot = CreatePanel($"Slot_{index + 1}", hotbar.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(12f + index * 104f, 0f), new Vector2(96f, 82f), new Vector2(0f, 0.5f), SlotColor);
+                hotbarSlots[index] = slot.GetComponent<Image>();
+                hotbarIcons[index] = CreateText("Icon", slot.transform, "", 25, FontStyle.Bold, Color.white, new Vector2(6f, -8f), new Vector2(34f, 38f), TextAnchor.MiddleCenter);
+                hotbarLabels[index] = CreateText("Label", slot.transform, "", 12, FontStyle.Bold, Color.white, new Vector2(4f, -48f), new Vector2(88f, 25f), TextAnchor.MiddleCenter);
+                hotbarCounts[index] = CreateText("Count", slot.transform, "", 13, FontStyle.Bold, Color.white, new Vector2(56f, -10f), new Vector2(34f, 24f), TextAnchor.MiddleRight);
+                slot.AddComponent<FarmHotbarSlotView>().Initialize(this, index);
+            }
+        }
+
+        private void CreateInventoryWindow(Transform root)
+        {
+            inventoryWindow = CreatePanel("InventoryWindow", root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Vector2.zero, new Color(0.015f, 0.02f, 0.012f, 0.58f));
+            var backdrop = inventoryWindow.GetComponent<RectTransform>();
+            backdrop.offsetMin = Vector2.zero;
+            backdrop.offsetMax = Vector2.zero;
+            var window = CreatePanel("Backpack", inventoryWindow.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 45f), new Vector2(790f, 560f), new Vector2(0.5f, 0.5f), PanelColor);
+            CreateText("Title", window.transform, "MOCHILA", 28, FontStyle.Bold, AccentColor, new Vector2(28f, -20f), new Vector2(350f, 36f));
+            inventoryCapacityText = CreateText("Capacity", window.transform, "", 17, FontStyle.Bold, Color.white, new Vector2(28f, -60f), new Vector2(400f, 28f));
+            CreateText("Hint", window.transform, "Arraste um item para qualquer espa\u00E7o da barra. Clique direito na barra para limpar.", 15, FontStyle.Normal, new Color(0.78f, 0.84f, 0.72f), new Vector2(28f, -92f), new Vector2(690f, 26f));
+            var close = CreateButton("Close", window.transform, "FECHAR  [I]", new Vector2(620f, -24f), new Vector2(140f, 44f));
+            close.onClick.AddListener(() => SetInventoryOpen(false));
+
+            for (var index = 0; index < inventorySlots.Length; index++)
+            {
+                var column = index % 5;
+                var row = index / 5;
+                var slot = CreatePanel($"InventorySlot_{index + 1}", window.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(28f + column * 150f, -135f - row * 100f), new Vector2(138f, 88f), new Vector2(0f, 1f), EmptySlotColor);
+                inventorySlots[index] = slot;
+                inventorySlotBackgrounds[index] = slot.GetComponent<Image>();
+                inventoryIcons[index] = CreateText("Icon", slot.transform, "", 28, FontStyle.Bold, Color.white, new Vector2(8f, -10f), new Vector2(38f, 38f), TextAnchor.MiddleCenter);
+                inventoryNames[index] = CreateText("Name", slot.transform, "", 13, FontStyle.Bold, Color.white, new Vector2(48f, -10f), new Vector2(82f, 42f));
+                inventoryCounts[index] = CreateText("Count", slot.transform, "", 15, FontStyle.Bold, AccentColor, new Vector2(88f, -58f), new Vector2(40f, 22f), TextAnchor.MiddleRight);
+                slot.AddComponent<FarmInventorySlotView>().Initialize(this, null);
+            }
+
+            dragGhost = CreatePanel("DragGhost", root, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(170f, 58f), Vector2.zero, new Color(0.08f, 0.10f, 0.06f, 0.96f));
+            dragGhostIcon = CreateText("Icon", dragGhost.transform, "", 26, FontStyle.Bold, Color.white, new Vector2(8f, -8f), new Vector2(40f, 40f), TextAnchor.MiddleCenter);
+            dragGhostLabel = CreateText("Label", dragGhost.transform, "", 14, FontStyle.Bold, Color.white, new Vector2(52f, -10f), new Vector2(108f, 36f), TextAnchor.MiddleLeft);
+            var group = dragGhost.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            dragGhost.SetActive(false);
+            inventoryWindow.SetActive(false);
+        }
+
+        private void EnsureEventSystem()
+        {
+            if (EventSystem.current != null) return;
+            var eventObject = new GameObject("Farm_EventSystem");
+            eventObject.transform.SetParent(transform, false);
+            eventObject.AddComponent<EventSystem>();
+            eventObject.AddComponent<InputSystemUIInputModule>();
+        }
+
+        private static GameObject CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2 pivot, Color color)
+        {
+            var panel = new GameObject(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            panel.GetComponent<Image>().color = color;
+            return panel;
+        }
+
+        private Text CreateText(string name, Transform parent, string value, int size, FontStyle style, Color color, Vector2 position, Vector2 dimensions, TextAnchor alignment = TextAnchor.UpperLeft)
+        {
+            var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            var text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.text = value;
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = alignment;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            var rect = text.rectTransform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = dimensions;
+            return text;
+        }
+
+        private Button CreateButton(string name, Transform parent, string label, Vector2 position, Vector2 size)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            var rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            buttonObject.GetComponent<Image>().color = new Color(0.28f, 0.38f, 0.16f, 1f);
+            var button = buttonObject.GetComponent<Button>();
+            var labelText = CreateText("Label", buttonObject.transform, label, 15, FontStyle.Bold, Color.white, Vector2.zero, size, TextAnchor.MiddleCenter);
+            labelText.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            labelText.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            labelText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            return button;
+        }
+    }
+}

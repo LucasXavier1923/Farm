@@ -1,0 +1,7 @@
+{
+  "csharpCode": "string[] paths = { \"Assets/Resources/FarmCrops/Pumpkin_S_Colored.prefab\", \"Assets/Resources/FarmCrops/Pumpkin_M_Colored.prefab\", \"Assets/Resources/FarmCrops/Pumpkin_L_Colored.prefab\" }; foreach (var path in paths) { var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(path); foreach (var renderer in prefab.GetComponentsInChildren<UnityEngine.Renderer>(true)) foreach (var material in renderer.sharedMaterials) UnityEngine.Debug.Log(\"[ABOBORA_COPIA_COLORIDA] \" + System.IO.Path.GetFileName(path) + \" | Material=\" + (material == null ? \"NULL\" : material.name) + \" | Shader=\" + (material == null || material.shader == null ? \"NULL\" : material.shader.name) + \" | Textura=\" + (material == null || material.mainTexture == null ? \"NULL\" : material.mainTexture.name)); }",
+  "className": "OriginalPumpkinInspection",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

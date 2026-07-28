@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); var text = \"[FARM_UI_DEPTH]\"; foreach (var item in hud.GetComponentsInChildren<UnityEngine.Transform>(true)) if (item.name == \"Status\" || item.name == \"Hotbar\" || item.name == \"InventoryWindow\" || item.name == \"Backpack\") { var renderer = item.GetComponent<UnityEngine.CanvasRenderer>(); text += \" | \" + item.name + \" depth=\" + (renderer != null ? renderer.absoluteDepth : -99) + \" alpha=\" + (renderer != null ? renderer.GetAlpha() : -1f) + \" active=\" + item.gameObject.activeInHierarchy + \" scale=\" + item.lossyScale; } UnityEngine.Debug.Log(text);",
+  "className": "InspectUiDepth",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

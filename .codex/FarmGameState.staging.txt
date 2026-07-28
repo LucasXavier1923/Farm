@@ -1,0 +1,181 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    [Serializable]
+    public sealed class CropDefinition
+    {
+        public string Id;
+        public string DisplayName;
+        public string SeedDisplayName;
+        public string SmallModelResource;
+        public string MediumModelResource;
+        public string LargeModelResource;
+        public float GrowthSeconds;
+        public int HarvestYield;
+        public int SellPrice;
+        public int SeedPackAmount;
+        public int SeedPackPrice;
+
+        public CropDefinition(string id, string displayName, string seedDisplayName,
+            string smallModelResource, string mediumModelResource, string largeModelResource,
+            float growthSeconds, int harvestYield, int sellPrice, int seedPackAmount, int seedPackPrice)
+        {
+            Id = id;
+            DisplayName = displayName;
+            SeedDisplayName = seedDisplayName;
+            SmallModelResource = smallModelResource;
+            MediumModelResource = mediumModelResource;
+            LargeModelResource = largeModelResource;
+            GrowthSeconds = growthSeconds;
+            HarvestYield = harvestYield;
+            SellPrice = sellPrice;
+            SeedPackAmount = seedPackAmount;
+            SeedPackPrice = seedPackPrice;
+        }
+    }
+
+    public static class CropCatalog
+    {
+        public static readonly CropDefinition Pumpkin = new(
+            "pumpkin", "Abóbora", "Sementes de abóbora",
+            "FarmCrops/Pumpkin_S_Colored", "FarmCrops/Pumpkin_M_Colored", "FarmCrops/Pumpkin_L_Colored",
+            10f, 2, 15, 5, 20);
+
+        public static CropDefinition Get(string id) =>
+            string.Equals(id, Pumpkin.Id, StringComparison.OrdinalIgnoreCase) ? Pumpkin : null;
+    }
+
+    [Serializable]
+    public sealed class FarmTileSaveData
+    {
+        public int Index;
+        public int State;
+        public string CropId;
+        public float GrowthSecondsRemaining;
+    }
+
+    [Serializable]
+    public sealed class FarmSaveData
+    {
+        public int Version = 1;
+        public int Money;
+        public int PumpkinSeeds;
+        public int Pumpkins;
+        public List<FarmTileSaveData> Tiles = new();
+    }
+
+    public sealed class FarmGameState : MonoBehaviour
+    {
+        [SerializeField] private int money = 100;
+        [SerializeField] private int pumpkinSeeds = 12;
+        [SerializeField] private int pumpkins;
+
+        public int Money => money;
+        public int PumpkinSeeds => pumpkinSeeds;
+        public int Pumpkins => pumpkins;
+        public event Action Changed;
+
+        public bool TryConsumePumpkinSeed()
+        {
+            if (pumpkinSeeds <= 0) return false;
+            pumpkinSeeds--;
+            NotifyChanged();
+            return true;
+        }
+
+        public void AddPumpkins(int amount)
+        {
+            if (amount <= 0) return;
+            pumpkins += amount;
+            NotifyChanged();
+        }
+
+        public bool TrySellAllPumpkins(out int quantity, out int earned)
+        {
+            quantity = pumpkins;
+            earned = quantity * CropCatalog.Pumpkin.SellPrice;
+            if (quantity <= 0) return false;
+            pumpkins = 0;
+            money += earned;
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TryBuyPumpkinSeedPack(out int amount, out int cost)
+        {
+            amount = CropCatalog.Pumpkin.SeedPackAmount;
+            cost = CropCatalog.Pumpkin.SeedPackPrice;
+            if (money < cost) return false;
+            money -= cost;
+            pumpkinSeeds += amount;
+            NotifyChanged();
+            return true;
+        }
+
+        public FarmSaveData CreateSaveData(List<FarmTileSaveData> tiles)
+        {
+            return new FarmSaveData
+            {
+                Money = money,
+                PumpkinSeeds = pumpkinSeeds,
+                Pumpkins = pumpkins,
+                Tiles = tiles ?? new List<FarmTileSaveData>()
+            };
+        }
+
+        public void Restore(FarmSaveData data)
+        {
+            if (data == null) return;
+            money = Mathf.Max(0, data.Money);
+            pumpkinSeeds = Mathf.Max(0, data.PumpkinSeeds);
+            pumpkins = Mathf.Max(0, data.Pumpkins);
+            NotifyChanged();
+        }
+
+        private void NotifyChanged() => Changed?.Invoke();
+    }
+
+    public static class FarmSaveSystem
+    {
+        private const string SaveFileName = "farm-prototype-save.json";
+        public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+
+        public static bool Save(FarmSaveData data, out string error)
+        {
+            try
+            {
+                File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
+                error = null;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                return false;
+            }
+        }
+
+        public static bool TryLoad(out FarmSaveData data, out string error)
+        {
+            data = null;
+            error = null;
+            try
+            {
+                if (!File.Exists(SavePath)) return false;
+                data = JsonUtility.FromJson<FarmSaveData>(File.ReadAllText(SavePath));
+                if (data != null) return true;
+                error = "O arquivo de save está vazio ou inválido.";
+                return false;
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                return false;
+            }
+        }
+    }
+}

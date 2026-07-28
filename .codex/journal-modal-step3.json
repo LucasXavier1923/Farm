@@ -1,0 +1,4 @@
+{
+  "csharpCode":"var plot=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>();var before=UnityEngine.PlayerPrefs.GetFloat(\"journal_modal_minute\");if(plot.GameState.MinutesOfDay<=before+0.05f)throw new System.Exception(\"Relógio não retomou após fechar diário\");UnityEngine.PlayerPrefs.DeleteKey(\"journal_modal_minute\");UnityEngine.Debug.Log(\"[JOURNAL_MODAL_V10_OK] pausa e retomada\");",
+  "className":"JournalModalStep3","methodName":"Run","parameters":[],"isMethodBody":true
+}

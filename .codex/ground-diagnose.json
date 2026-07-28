@@ -1,0 +1,15 @@
+{
+  "csharpCode": "var controller = player.GetComponent<CharacterController>(); var renderers = player.GetComponentsInChildren<Renderer>(); var visualMin = float.PositiveInfinity; foreach (var renderer in renderers) if (renderer.gameObject.activeInHierarchy) visualMin = Mathf.Min(visualMin, renderer.bounds.min.y); RaycastHit hit; var foundGround = Physics.Raycast(player.transform.position + Vector3.up * 1000f, Vector3.down, out hit, 2000f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore); Debug.Log(\"[GroundDiagnostic] playerY=\" + player.transform.position.y + \" controllerBottom=\" + controller.bounds.min.y + \" visualFeet=\" + visualMin + \" groundY=\" + (foundGround ? hit.point.y.ToString() : \"none\") + \" ground=\" + (foundGround ? hit.collider.name : \"none\"));",
+  "className": "DiagnosePlayerGrounding",
+  "methodName": "Execute",
+  "parameters": [
+    {
+      "typeName": "UnityEngine.GameObject",
+      "name": "player",
+      "value": {
+        "path": "Player"
+      }
+    }
+  ],
+  "isMethodBody": true
+}

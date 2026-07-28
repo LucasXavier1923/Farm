@@ -1,0 +1,8 @@
+{
+  "prefabAssetPath": "Assets/PolygonFarm/Prefabs/Props/SM_Prop_Tool_Hoe_01.prefab",
+  "gameObjectPath": "Player/Hoe_Test",
+  "position": { "x": 0.42, "y": 1.0, "z": 0.28 },
+  "rotation": { "x": 15.0, "y": 90.0, "z": 80.0 },
+  "scale": { "x": 0.85, "y": 0.85, "z": 0.85 },
+  "isLocalSpace": true
+}

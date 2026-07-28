@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var player = UnityEngine.GameObject.Find(\"Player\"); var station = UnityEngine.GameObject.Find(\"Farm_Sell_Station\"); if (plot == null || player == null || station == null) throw new System.Exception(\"Objetos do teste de alcance ausentes\"); var original = player.transform.position; var controller = player.GetComponent<UnityEngine.CharacterController>(); var direction = player.transform.position - station.transform.position; direction.y = 0f; if (direction.sqrMagnitude < 0.01f) direction = UnityEngine.Vector3.forward; direction.Normalize(); if (controller != null) controller.enabled = false; player.transform.position = station.transform.position + direction * 1.25f; if (plot.ShopVisible) throw new System.Exception(\"Loja aparece longe demais: 1.25 unidades\"); player.transform.position = station.transform.position + direction * 0.75f; if (!plot.ShopVisible) throw new System.Exception(\"Loja nao aparece perto: 0.75 unidade\"); player.transform.position = original; if (controller != null) controller.enabled = true; UnityEngine.Debug.Log(\"[FARM_SELL_RANGE_OK] oculto a 1.25u | visivel a 0.75u | limite 1u\");",
+  "className": "FarmSellStationRangeValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

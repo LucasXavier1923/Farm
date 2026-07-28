@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); var player = UnityEngine.GameObject.Find(\"Player\"); if (plot == null || hud == null || player == null || plot.GameState == null) throw new System.Exception(\"Base de pickup ausente\"); var state = plot.GameState; state.Restore(new FarmPrototype.Farming.FarmSaveData { Version = 6, Money = 100, PumpkinSeeds = 12, Pumpkins = 0, Tutorial = new FarmPrototype.Farming.FarmTutorialProgress(), Storage = new System.Collections.Generic.List<FarmPrototype.Farming.InventoryStack>(), CollectedPickupIds = new System.Collections.Generic.List<string>() }); var origin = new UnityEngine.GameObject(\"Pickup_Test_PlayerOrigin\"); origin.transform.position = player.transform.position; origin.transform.rotation = player.transform.rotation; var pickupObject = new UnityEngine.GameObject(\"Pickup_Runtime_Magnet_Test\"); pickupObject.transform.position = player.transform.position + UnityEngine.Vector3.right * 1.8f + UnityEngine.Vector3.up * 0.65f; pickupObject.AddComponent<FarmPrototype.Farming.FarmWorldPickup>().Initialize(\"runtime_magnet_test\", FarmPrototype.Farming.FarmGameState.PumpkinSeedId, 2, player.transform, state, hud, null); UnityEngine.Debug.Log(\"[PICKUP_V6_TEST_1_READY] pickup a 1.8m do jogador\");",
+  "className": "FarmPickupV6RuntimeStep1",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

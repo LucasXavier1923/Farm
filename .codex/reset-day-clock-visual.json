@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); if (plot != null && plot.DayClock != null) { plot.DayClock.SetClockForTesting(1, 480f); plot.DayClock.SetSimulationSpeed(1f); }",
+  "className": "FarmDayClockVisualReset",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

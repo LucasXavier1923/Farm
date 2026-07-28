@@ -1,0 +1,1 @@
+{"csharpCode":"if(!FarmPrototype.Farming.FarmSaveSystem.TryLoad(out var save,out var error))throw new System.Exception(\"Falha load: \"+error);UnityEngine.Debug.Log(\"[V12_SAVE_INSPECT] \"+UnityEngine.JsonUtility.ToJson(save));","className":"InspectV12Save","methodName":"Run","parameters":[],"isMethodBody":true}

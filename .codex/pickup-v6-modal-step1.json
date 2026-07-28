@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); var player = UnityEngine.GameObject.Find(\"Player\"); if (plot == null || hud == null || player == null) throw new System.Exception(\"Base modal ausente\"); var snapshot = plot.GameState.CreateSaveData(null); snapshot.CollectedPickupIds.RemoveAll(id => id == \"modal_pause_test\"); plot.GameState.Restore(snapshot); hud.SetInventoryOpen(true); var go = new UnityEngine.GameObject(\"Pickup_Modal_Pause_Test\"); go.transform.position = player.transform.position + UnityEngine.Vector3.up * 0.65f; go.AddComponent<FarmPrototype.Farming.FarmWorldPickup>().Initialize(\"modal_pause_test\", FarmPrototype.Farming.FarmGameState.PumpkinSeedId, 1, player.transform, plot.GameState, hud, null);",
+  "className": "FarmPickupV6ModalStep1",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

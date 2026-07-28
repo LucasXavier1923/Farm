@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); if (plot == null || hud == null) throw new System.Exception(\"UI ausente\"); var state = plot.GameState; state.Restore(new FarmPrototype.Farming.FarmSaveData { Version = 5, Money = 100, PumpkinSeeds = 12, Pumpkins = 0, Tutorial = new FarmPrototype.Farming.FarmTutorialProgress(), Storage = new System.Collections.Generic.List<FarmPrototype.Farming.InventoryStack>() }); state.AddItem(FarmPrototype.Farming.FarmGameState.PumpkinId, 4); state.TransferToStorage(FarmPrototype.Farming.FarmGameState.PumpkinSeedId, 5); state.TransferToStorage(FarmPrototype.Farming.FarmGameState.PumpkinId, 2); hud.SetStorageOpen(true); UnityEngine.Debug.Log(\"[STORAGE_VISUAL_READY]\");",
+  "className": "FarmStorageVisualOpen",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

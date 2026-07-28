@@ -1,0 +1,377 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+namespace FarmPrototype.Farming
+{
+    [Serializable]
+    public sealed class CraftingIngredient
+    {
+        public ItemDefinition Item;
+        [Min(1)] public int Quantity = 1;
+    }
+
+    [CreateAssetMenu(menuName = "Farm/Crafting Recipe", fileName = "CraftingRecipe")]
+    public sealed class CraftingRecipe : ScriptableObject
+    {
+        public string Id;
+        public string DisplayName;
+        [TextArea] public string Description;
+        public List<CraftingIngredient> Ingredients = new();
+        public ItemDefinition OutputItem;
+        [Min(1)] public int OutputQuantity = 1;
+        public GameObject PreviewPrefab;
+
+        public string IngredientText(FarmGameState state)
+        {
+            var builder = new StringBuilder();
+            for (var index = 0; index < Ingredients.Count; index++)
+            {
+                var ingredient = Ingredients[index];
+                if (ingredient == null || ingredient.Item == null) continue;
+                if (builder.Length > 0) builder.Append("  \u2022  ");
+                var owned = state != null ? state.GetQuantity(ingredient.Item.Id) : 0;
+                builder.Append($"{ingredient.Item.DisplayName} {owned}/{ingredient.Quantity}");
+            }
+            return builder.ToString();
+        }
+
+        public bool HasIngredients(FarmGameState state)
+        {
+            if (state == null || OutputItem == null || OutputQuantity <= 0 || Ingredients == null || Ingredients.Count == 0) return false;
+            foreach (var ingredient in Ingredients)
+                if (ingredient == null || ingredient.Item == null || ingredient.Quantity <= 0 || state.GetQuantity(ingredient.Item.Id) < ingredient.Quantity) return false;
+            return true;
+        }
+    }
+
+    public static class FarmCraftingDatabase
+    {
+        private static List<CraftingRecipe> recipes;
+        public static IReadOnlyList<CraftingRecipe> Recipes
+        {
+            get
+            {
+                if (recipes == null)
+                {
+                    recipes = new List<CraftingRecipe>(Resources.LoadAll<CraftingRecipe>("GameData/Recipes"));
+                    recipes.RemoveAll(recipe => recipe == null || string.IsNullOrWhiteSpace(recipe.Id) || recipe.OutputItem == null);
+                    recipes.Sort((left, right) => string.Compare(left.Id, right.Id, StringComparison.OrdinalIgnoreCase));
+                }
+                return recipes;
+            }
+        }
+
+        public static void Reload() => recipes = null;
+    }
+
+    public sealed class FarmCraftingStation : MonoBehaviour
+    {
+        private Vector3 normalScale;
+        public void Initialize() => normalScale = transform.localScale;
+        public void SetHighlighted(bool value) => transform.localScale = value ? normalScale * 1.04f : normalScale;
+    }
+
+    public sealed class FarmCraftingSystem : MonoBehaviour
+    {
+        public const float InteractionDistance = 1f;
+        private static readonly Color PanelColor = new(0.055f, 0.075f, 0.05f, 0.98f);
+        private static readonly Color AccentColor = new(0.95f, 0.67f, 0.18f, 1f);
+        private static readonly Color ReadyColor = new(0.34f, 0.78f, 0.38f, 1f);
+
+        private FarmTestPlot plot;
+        private FarmGameState state;
+        private FarmHudController hud;
+        private Transform player;
+        private FarmCraftingStation station;
+        private Font font;
+        private GameObject window;
+        private CanvasGroup group;
+        private Text proximityText;
+        private Button launcherButton;
+        private readonly List<Text> recipeTexts = new();
+        private readonly List<Button> recipeButtons = new();
+        private readonly List<Text> recipeButtonTexts = new();
+        private bool open;
+
+        public bool IsOpen => open;
+        public bool InRange => player != null && station != null && Vector3.Distance(player.position, station.transform.position) <= InteractionDistance;
+        public FarmCraftingStation Station => station;
+        public string RecipeText(int index) => index >= 0 && index < recipeTexts.Count ? recipeTexts[index].text : string.Empty;
+
+        public void Initialize(FarmTestPlot owner, FarmGameState gameState, FarmHudController ownerHud, Transform playerTransform)
+        {
+            if (window != null) return;
+            plot = owner;
+            state = gameState;
+            hud = ownerHud;
+            player = playerTransform;
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            CreateStation();
+            CreateMaterialPickups();
+            var canvas = hud != null ? hud.GetComponentInChildren<Canvas>() : null;
+            if (canvas == null) throw new InvalidOperationException("Canvas da fazenda ausente para fabrica\u00E7\u00E3o.");
+            CreateLauncher(canvas.transform);
+            CreateWindow(canvas.transform);
+            SetOpen(false);
+        }
+
+        private void Update()
+        {
+            if (station == null || hud == null) return;
+            var near = InRange;
+            station.SetHighlighted(near && !FarmHudController.IsModalOpen);
+            if (proximityText != null)
+            {
+                proximityText.text = near ? "BANCADA PR\u00D3XIMA  [C]" : "BANCADA  \u2022  aproxime-se";
+                proximityText.color = near ? ReadyColor : new Color(0.66f, 0.70f, 0.62f);
+            }
+            if (launcherButton != null) launcherButton.interactable = near && !FarmHudController.IsModalOpen;
+
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.cKey.wasPressedThisFrame)
+            {
+                if (open) SetOpen(false);
+                else if (near) SetOpen(true);
+                else hud.ShowSystemToast("Chegue a at\u00E9 1 unidade da bancada.", true);
+            }
+            if (open && keyboard != null && keyboard.escapeKey.wasPressedThisFrame) SetOpen(false);
+
+            var mouse = Mouse.current;
+            if (!open && near && mouse != null && mouse.leftButton.wasPressedThisFrame && !EventSystem.current.IsPointerOverGameObject())
+            {
+                var camera = Camera.main;
+                if (camera != null && Physics.Raycast(camera.ScreenPointToRay(mouse.position.ReadValue()), out var hit, 500f) &&
+                    hit.collider.GetComponentInParent<FarmCraftingStation>() == station) SetOpen(true);
+            }
+            if (open)
+            {
+                if (hud.IsInventoryOpen || hud.IsStorageOpen || hud.IsJournalOpen || hud.IsSleepConfirmationOpen ||
+                    hud.IsDailyOrdersOpen || hud.IsSettingsOpen || hud.IsMasteryOpen || !near)
+                {
+                    SetOpen(false);
+                    return;
+                }
+                Refresh();
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (hud != null) hud.SetCraftingOpen(false);
+        }
+
+        public void SetOpen(bool value)
+        {
+            if (hud == null || group == null) return;
+            if (value && !InRange) return;
+            if (value)
+            {
+                hud.SetInventoryOpen(false);
+                hud.SetStorageOpen(false);
+                hud.SetJournalOpen(false);
+                hud.SetSleepConfirmationOpen(false);
+                hud.SetDailyOrdersOpen(false);
+            }
+            open = value;
+            group.alpha = value ? 1f : 0f;
+            group.interactable = value;
+            group.blocksRaycasts = value;
+            hud.SetCraftingOpen(value);
+            if (value)
+            {
+                Refresh();
+                window.transform.SetAsLastSibling();
+            }
+        }
+
+        public bool Craft(int index)
+        {
+            var recipes = FarmCraftingDatabase.Recipes;
+            if (!open || !InRange || index < 0 || index >= recipes.Count) return false;
+            var recipe = recipes[index];
+            if (!state.TryCraft(recipe, out var error))
+            {
+                hud.ShowSystemToast(error, true);
+                Refresh();
+                return false;
+            }
+            hud.ShowSystemToast($"Fabricado: {recipe.OutputItem.DisplayName} x{recipe.OutputQuantity}.", false);
+            Refresh();
+            return true;
+        }
+
+        private void Refresh()
+        {
+            var recipes = FarmCraftingDatabase.Recipes;
+            for (var index = 0; index < recipeTexts.Count; index++)
+            {
+                var recipe = recipes[index];
+                recipeTexts[index].text = $"{recipe.DisplayName.ToUpperInvariant()}\n{recipe.Description}\n{recipe.IngredientText(state)}";
+                var ready = recipe.HasIngredients(state);
+                recipeButtons[index].interactable = ready && InRange;
+                recipeButtonTexts[index].text = ready ? $"FABRICAR  x{recipe.OutputQuantity}" : "FALTAM MATERIAIS";
+                recipeButtonTexts[index].color = ready ? Color.white : new Color(0.70f, 0.72f, 0.66f);
+            }
+        }
+
+        private void CreateStation()
+        {
+            var tiles = FindObjectsByType<FarmTestTile>(FindObjectsSortMode.None);
+            if (tiles.Length == 0) throw new InvalidOperationException("Canteiros ausentes para posicionar a bancada.");
+            var center = Vector3.zero;
+            foreach (var tile in tiles) center += tile.transform.position;
+            center /= tiles.Length;
+            var reference = FindAnyObjectByType<FarmOrderBoardStation>();
+            var outward = reference != null ? Vector3.ProjectOnPlane(reference.transform.position - center, Vector3.up).normalized : Vector3.forward;
+            if (outward.sqrMagnitude < 0.1f) outward = Vector3.forward;
+            var side = Vector3.Cross(Vector3.up, outward).normalized;
+            var root = new GameObject("Farm_Crafting_Station");
+            root.transform.position = center + side * 7f;
+            root.transform.rotation = Quaternion.LookRotation(-side, Vector3.up);
+
+            AddProp("Crafting/WorkbenchTable", root.transform, Vector3.zero, Vector3.zero, Vector3.one);
+            AddProp("Crafting/WorkbenchToolbox", root.transform, new Vector3(-0.45f, 0.82f, 0f), new Vector3(0f, 12f, 0f), Vector3.one * 0.85f);
+            AddProp("Crafting/WorkbenchAnvil", root.transform, new Vector3(1.15f, 0f, 0.25f), new Vector3(0f, -18f, 0f), Vector3.one * 0.8f);
+            var collider = root.AddComponent<BoxCollider>();
+            collider.center = new Vector3(0f, 0.75f, 0f);
+            collider.size = new Vector3(2.8f, 1.7f, 1.5f);
+            station = root.AddComponent<FarmCraftingStation>();
+            station.Initialize();
+
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            marker.name = "Crafting_Marker";
+            marker.transform.SetParent(root.transform, false);
+            marker.transform.localPosition = new Vector3(0f, 0.025f, 0f);
+            marker.transform.localScale = new Vector3(1.6f, 0.025f, 1.6f);
+            var markerCollider = marker.GetComponent<Collider>();
+            if (markerCollider != null) Destroy(markerCollider);
+            marker.GetComponent<Renderer>().material.color = new Color(0.96f, 0.56f, 0.12f, 0.48f);
+        }
+
+        private void AddProp(string path, Transform parent, Vector3 localPosition, Vector3 localEuler, Vector3 localScale)
+        {
+            var prefab = Resources.Load<GameObject>(path);
+            if (prefab == null) return;
+            var prop = Instantiate(prefab, parent);
+            prop.name = prefab.name;
+            prop.transform.localPosition = localPosition;
+            prop.transform.localEulerAngles = localEuler;
+            prop.transform.localScale = localScale;
+        }
+
+        private void CreateMaterialPickups()
+        {
+            CreateMaterialPickup("crafting_wood_cache", "wood", 8, "Crafting/WoodStack", station.transform.position + new Vector3(-2.4f, 0.35f, 1.8f), 0.55f);
+            CreateMaterialPickup("crafting_stone_cache", "stone", 8, "Crafting/StonePile", station.transform.position + new Vector3(2.4f, 0.28f, 1.8f), 0.65f);
+        }
+
+        private void CreateMaterialPickup(string pickupId, string itemId, int quantity, string prefabPath, Vector3 position, float scale)
+        {
+            if (state.IsPickupCollected(pickupId)) return;
+            var root = new GameObject($"Pickup_{pickupId}");
+            root.transform.position = position;
+            var prefab = Resources.Load<GameObject>(prefabPath);
+            Transform visual = null;
+            if (prefab != null)
+            {
+                var instance = Instantiate(prefab, root.transform);
+                instance.name = "Visual";
+                instance.transform.localPosition = Vector3.zero;
+                instance.transform.localScale = Vector3.one * scale;
+                visual = instance.transform;
+            }
+            root.AddComponent<FarmWorldPickup>().Initialize(pickupId, itemId, quantity, player, state, hud, visual);
+        }
+
+        private void CreateLauncher(Transform root)
+        {
+            var buttonObject = CreatePanel("OpenCrafting", root, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -386f), new Vector2(240f, 44f), new Vector2(1f, 1f), new Color(0.18f, 0.23f, 0.14f, 1f));
+            launcherButton = buttonObject.AddComponent<Button>();
+            proximityText = CreateText("Label", buttonObject.transform, string.Empty, 15, FontStyle.Bold, Color.white, Vector2.zero, new Vector2(240f, 44f), TextAnchor.MiddleCenter);
+            proximityText.rectTransform.anchorMin = Vector2.zero;
+            proximityText.rectTransform.anchorMax = Vector2.one;
+            proximityText.rectTransform.offsetMin = Vector2.zero;
+            proximityText.rectTransform.offsetMax = Vector2.zero;
+            launcherButton.onClick.AddListener(() => SetOpen(true));
+        }
+
+        private void CreateWindow(Transform root)
+        {
+            window = CreatePanel("CraftingWindow", root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Vector2.zero, new Color(0.01f, 0.02f, 0.015f, 0.80f));
+            var backdrop = window.GetComponent<RectTransform>();
+            backdrop.offsetMin = Vector2.zero;
+            backdrop.offsetMax = Vector2.zero;
+            group = window.AddComponent<CanvasGroup>();
+            var panel = CreatePanel("CraftingPanel", window.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1050f, 680f), new Vector2(0.5f, 0.5f), PanelColor);
+            CreateText("Title", panel.transform, "BANCADA DE FABRICA\u00C7\u00C3O", 30, FontStyle.Bold, AccentColor, new Vector2(30f, -22f), new Vector2(700f, 42f));
+            CreateText("Subtitle", panel.transform, "Materiais s\u00E3o consumidos apenas quando o item cabe na mochila.", 16, FontStyle.Normal, new Color(0.78f, 0.84f, 0.74f), new Vector2(30f, -66f), new Vector2(800f, 28f));
+            var close = CreateButton("CloseCrafting", panel.transform, "FECHAR  [C]", new Vector2(860f, -22f), new Vector2(160f, 44f));
+            close.onClick.AddListener(() => SetOpen(false));
+
+            var recipes = FarmCraftingDatabase.Recipes;
+            for (var index = 0; index < recipes.Count; index++)
+            {
+                var card = CreatePanel($"CraftingRecipe_{index + 1}", panel.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(30f, -118f - index * 168f), new Vector2(990f, 150f), new Vector2(0f, 1f), new Color(0.11f, 0.14f, 0.09f, 1f));
+                recipeTexts.Add(CreateText("RecipeText", card.transform, string.Empty, 16, FontStyle.Normal, Color.white, new Vector2(20f, -14f), new Vector2(710f, 122f)));
+                var captured = index;
+                var button = CreateButton("Craft", card.transform, "FABRICAR", new Vector2(755f, -47f), new Vector2(210f, 56f));
+                recipeButtons.Add(button);
+                recipeButtonTexts.Add(button.GetComponentInChildren<Text>());
+                button.onClick.AddListener(() => Craft(captured));
+            }
+        }
+
+        private GameObject CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2 pivot, Color color)
+        {
+            var panel = new GameObject(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            panel.GetComponent<Image>().color = color;
+            return panel;
+        }
+
+        private Text CreateText(string name, Transform parent, string content, int size, FontStyle style, Color color, Vector2 position, Vector2 dimensions, TextAnchor alignment = TextAnchor.UpperLeft)
+        {
+            var item = new GameObject(name, typeof(RectTransform), typeof(Text));
+            item.transform.SetParent(parent, false);
+            var rect = item.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = dimensions;
+            var text = item.GetComponent<Text>();
+            text.font = font;
+            text.text = content;
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = alignment;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            return text;
+        }
+
+        private Button CreateButton(string name, Transform parent, string label, Vector2 position, Vector2 size)
+        {
+            var item = CreatePanel(name, parent, new Vector2(0f, 1f), new Vector2(0f, 1f), position, size, new Vector2(0f, 1f), new Color(0.24f, 0.34f, 0.16f, 1f));
+            var button = item.AddComponent<Button>();
+            var text = CreateText("Label", item.transform, label, 15, FontStyle.Bold, Color.white, Vector2.zero, size, TextAnchor.MiddleCenter);
+            text.rectTransform.anchorMin = Vector2.zero;
+            text.rectTransform.anchorMax = Vector2.one;
+            text.rectTransform.offsetMin = Vector2.zero;
+            text.rectTransform.offsetMax = Vector2.zero;
+            return button;
+        }
+    }
+}

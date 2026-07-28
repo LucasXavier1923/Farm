@@ -1,0 +1,7 @@
+{
+  "csharpCode": "FarmPrototype.Farming.FarmContentDatabase.Reload(); var seed = FarmPrototype.Farming.FarmContentDatabase.GetItem(\"pumpkin_seed\"); var pumpkin = FarmPrototype.Farming.FarmContentDatabase.GetItem(\"pumpkin\"); var crop = FarmPrototype.Farming.FarmContentDatabase.GetCrop(\"pumpkin\"); if (seed == null || pumpkin == null || crop == null) throw new System.Exception(\"Conteúdo não foi carregado pelo banco\"); if (crop.SeedItem != seed || crop.HarvestItem != pumpkin || crop.SmallModel == null || crop.MediumModel == null || crop.LargeModel == null) throw new System.Exception(\"Referências da cultura estão incompletas\"); var seedClass = UnityEditor.MonoScript.FromScriptableObject(seed).GetClass(); var cropClass = UnityEditor.MonoScript.FromScriptableObject(crop).GetClass(); if (seedClass != typeof(FarmPrototype.Farming.ItemDefinition) || cropClass != typeof(FarmPrototype.Farming.CropDefinition)) throw new System.Exception(\"MonoScript inválido nos assets\"); UnityEngine.Debug.Log(\"[FARM_CONTENT_OK] ItemDefinition + CropDefinition | 3 modelos | preço $\" + pumpkin.BaseSellPrice);",
+  "className": "FarmContentAssetValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

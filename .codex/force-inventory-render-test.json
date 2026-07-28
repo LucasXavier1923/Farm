@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); if (hud == null) throw new System.Exception(\"HUD ausente\"); foreach (var item in hud.GetComponentsInChildren<UnityEngine.Transform>(true)) if (item.name == \"InventoryWindow\") item.SetAsLastSibling(); UnityEngine.Canvas.ForceUpdateCanvases(); hud.SetInventoryOpen(true); UnityEngine.Canvas.ForceUpdateCanvases();",
+  "className": "ForceInventoryRenderTest",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

@@ -1,0 +1,20 @@
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    [CreateAssetMenu(menuName = "Farm/Crop Definition", fileName = "CropDefinition")]
+    public sealed class CropDefinition : ScriptableObject
+    {
+        public string Id;
+        public string DisplayName;
+        public ItemDefinition SeedItem;
+        public ItemDefinition HarvestItem;
+        public GameObject SmallModel;
+        public GameObject MediumModel;
+        public GameObject LargeModel;
+        [Min(0.1f)] public float GrowthSeconds = 10f;
+        [Min(1)] public int HarvestYield = 1;
+        [Min(1)] public int SeedPackAmount = 5;
+        [Min(0)] public int SeedPackPrice = 20;
+    }
+}

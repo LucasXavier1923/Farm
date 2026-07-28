@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917014aa787fe8b44a848afbc917355a, type: 3}
+  m_Name: 01_scarecrow
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.FarmBuildableDefinition
+  Id: 01_scarecrow
+  DisplayName: Espantalho
+  Category: 0
+  Description: "Protege cultivos pr\xF3ximos das visitas de corvos."
+  KitItem: {fileID: 11400000, guid: 59760eba452bb4047821f9c5e63e12b9, type: 2}
+  Prefab: {fileID: 1436178878525030, guid: 3a287a372b456e84895c52a36198429c, type: 3}
+  Footprint: {x: 1.2, y: 2.4, z: 1.2}
+  PlacedScale: {x: 1, y: 1, z: 1}
+  GroundOffset: 0
+  Function: 2
+  EffectRadius: 6.5
+  RotationStep: 45

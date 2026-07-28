@@ -1,0 +1,6 @@
+{
+  "maxEntries": 100,
+  "logTypeFilter": "Assert",
+  "includeStackTrace": true,
+  "lastMinutes": 1
+}

@@ -1,0 +1,7 @@
+{
+  "csharpCode": "using UnityEditor;\nusing UnityEngine;\n\npublic static class NormalizePolygonFarmLitMaterials\n{\n    public static string Main()\n    {\n        var guids = AssetDatabase.FindAssets(\"t:Material\", new[] { \"Assets/PolygonFarm/Materials\" });\n        int normalized = 0;\n        foreach (var guid in guids)\n        {\n            var material = AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));\n            if (material == null || material.shader == null || material.shader.name != \"Universal Render Pipeline/Lit\")\n                continue;\n\n            material.SetColor(\"_BaseColor\", Color.white);\n            material.SetFloat(\"_Metallic\", 0f);\n            material.SetFloat(\"_Smoothness\", 0.2f);\n            EditorUtility.SetDirty(material);\n            normalized++;\n        }\n        AssetDatabase.SaveAssets();\n        AssetDatabase.Refresh();\n        return $\"Cor-base e acabamento normalizados em {normalized} materiais URP/Lit.\";\n    }\n}",
+  "className": "NormalizePolygonFarmLitMaterials",
+  "methodName": "Main",
+  "parameters": [],
+  "isMethodBody": false
+}

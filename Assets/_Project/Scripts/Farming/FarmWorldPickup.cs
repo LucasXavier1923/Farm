@@ -1,0 +1,127 @@
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    public sealed class FarmWorldPickup : MonoBehaviour
+    {
+        [SerializeField] private string pickupId;
+        [SerializeField] private string itemId;
+        [SerializeField, Min(1)] private int quantity = 1;
+        [SerializeField, Min(0.5f)] private float magnetDistance = 2.5f;
+        [SerializeField, Min(0.1f)] private float collectDistance = 0.7f;
+        [SerializeField, Min(0.1f)] private float magnetSpeed = 5.5f;
+        [SerializeField, Min(0)] private int energyCost;
+
+        private Transform player;
+        private Transform visual;
+        private FarmGameState gameState;
+        private FarmHudController hud;
+        private Vector3 anchorPosition;
+        private float phase;
+        private float nextFullToastAt;
+        private float nextAuthorityToastAt;
+
+        public string PickupId => pickupId;
+        public string ItemId => itemId;
+        public int Quantity => quantity;
+        public float EffectiveMagnetDistance => gameState != null && gameState.GetMasteryLevel(FarmMasterySkill.Harvesting) >= 2
+            ? Mathf.Max(magnetDistance, FarmMasteryRules.SkilledMagnetDistance)
+            : magnetDistance;
+
+        public void Initialize(string id, string definitionId, int amount, Transform playerTransform, FarmGameState state, FarmHudController hudController, Transform visualTransform, int routeEnergyCost = 0)
+        {
+            pickupId = id;
+            itemId = definitionId;
+            quantity = Mathf.Max(1, amount);
+            energyCost = Mathf.Max(0, routeEnergyCost);
+            player = playerTransform;
+            gameState = state;
+            hud = hudController;
+            visual = visualTransform;
+            anchorPosition = transform.position;
+            phase = Mathf.Abs(id.GetHashCode() % 1000) * 0.01f;
+            DisablePhysicalCollisions();
+            if (gameState != null && gameState.IsPickupCollected(pickupId)) Destroy(gameObject);
+        }
+
+        // Pickups use distance checks rather than physics triggers. Asset prefabs
+        // may include solid colliders, which would otherwise push the player while
+        // the magnet moves the pickup toward them.
+        private void DisablePhysicalCollisions()
+        {
+            foreach (var pickupCollider in GetComponentsInChildren<Collider>(true))
+                pickupCollider.enabled = false;
+            foreach (var body in GetComponentsInChildren<Rigidbody>(true))
+                body.isKinematic = true;
+        }
+
+        private void Update()
+        {
+            if (player == null || gameState == null) return;
+            if (gameState.IsPickupCollected(pickupId))
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            if (visual != null) visual.Rotate(0f, 55f * Time.deltaTime, 0f, Space.World);
+            if (FarmHudController.IsModalOpen) return;
+
+            var target = player.position + (Vector3.up * 0.65f);
+            var distance = Vector3.Distance(transform.position, target);
+            if (distance <= collectDistance)
+            {
+                TryCollect();
+                return;
+            }
+
+            if (distance <= EffectiveMagnetDistance)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, target, magnetSpeed * Time.deltaTime);
+            }
+            else
+            {
+                var bob = Mathf.Sin((Time.time * 2.4f) + phase) * 0.12f;
+                transform.position = anchorPosition + (Vector3.up * bob);
+            }
+        }
+
+        public bool TryCollect()
+        {
+            if (gameState == null || gameState.IsPickupCollected(pickupId)) return false;
+            if (!FarmSessionTime.IsSimulationAuthority)
+            {
+                if (Time.unscaledTime >= nextAuthorityToastAt)
+                {
+                    hud?.ShowSystemToast(FarmLocalization.Get("backend.peer.awaiting_host", "Waiting for host confirmation."), true);
+                    nextAuthorityToastAt = Time.unscaledTime + 2.5f;
+                }
+                return false;
+            }
+            if (!gameState.CanAdd(itemId, quantity))
+            {
+                if (Time.unscaledTime >= nextFullToastAt)
+                {
+                    hud?.ShowInventoryFullToast();
+                    nextFullToastAt = Time.unscaledTime + 2.5f;
+                }
+                return false;
+            }
+            if (energyCost > 0 && gameState.Energy < energyCost)
+            {
+                if (Time.unscaledTime >= nextFullToastAt)
+                {
+                    hud?.ShowSystemToast(FarmLocalization.Format("exploration.energy_required", "You need {0} Energy to finish this route.", energyCost), true);
+                    nextFullToastAt = Time.unscaledTime + 2.5f;
+                }
+                return false;
+            }
+
+            if (!gameState.TryCollectPickup(pickupId, itemId, quantity)) return false;
+            if (energyCost > 0) gameState.TrySpendEnergy(energyCost);
+            hud?.ShowPickupToast(itemId, quantity);
+            Destroy(gameObject);
+            return true;
+        }
+    }
+}

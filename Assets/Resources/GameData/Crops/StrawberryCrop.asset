@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11c74bb7f9438a6499afe07b7c157e8a, type: 3}
+  m_Name: StrawberryCrop
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.CropDefinition
+  Id: strawberry
+  DisplayName: Morango
+  SeedItem: {fileID: 11400000, guid: eb921b0dc9b46e84da2b9114b621b7e3, type: 2}
+  HarvestItem: {fileID: 11400000, guid: c128c687aaf337e408f090c2084b9d45, type: 2}
+  SmallModel: {fileID: 1279336675079896, guid: 58ef45e18e1b9f540a07538f4749f29a, type: 3}
+  MediumModel: {fileID: 1195914780563468, guid: a0c26b0094e8c154eae3fb8e7a91f99d, type: 3}
+  LargeModel: {fileID: 1638431593621700, guid: 3536ab62b0860a943b3f8b133d4b3ebe, type: 3}
+  GrowthSeconds: 10
+  HarvestYield: 3
+  PreferredSeason: 0
+  PreferredSeasonYieldBonus: 1
+  SeedPackAmount: 6
+  SeedPackPrice: 28

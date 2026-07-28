@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); if (plot == null || !plot.ShopInRange || plot.ShopCrop == null) throw new System.Exception(\"Loja fora de alcance\"); for (int i = 0; i < plot.ShopCropCount + 1 && plot.ShopCrop.Id != \"carrot\"; i++) plot.CycleShopCrop(1); var beforeMoney = plot.GameState.Money; var beforeSeeds = plot.GameState.GetQuantity(\"carrot_seed\"); plot.RequestBuySeeds(); if (plot.GameState.Money != beforeMoney - plot.ShopCrop.SeedPackPrice || plot.GameState.GetQuantity(\"carrot_seed\") != beforeSeeds + plot.ShopCrop.SeedPackAmount) throw new System.Exception(\"Compra de cenoura pelo catálogo falhou\"); UnityEngine.Debug.Log(\"[MULTI_CROP_SHOP_OK] navegação + compra contextual\");",
+  "className": "ValidateMultiCropShopRuntime",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

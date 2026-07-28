@@ -1,0 +1,5 @@
+{
+  "filter": "SM_Prop_Tool_Hoe_01 t:Prefab",
+  "searchInFolders": [ "Assets/PolygonFarm/Prefabs/Props" ],
+  "maxResults": 10
+}

@@ -1,0 +1,45 @@
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+namespace FarmPrototype.Farming
+{
+    public sealed class FarmInventorySlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    {
+        private FarmHudController hud;
+        private string itemId;
+
+        public void Initialize(FarmHudController owner, string id)
+        {
+            hud = owner;
+            itemId = id;
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (!string.IsNullOrEmpty(itemId)) hud?.BeginItemDrag(itemId, eventData.position);
+        }
+
+        public void OnDrag(PointerEventData eventData) => hud?.UpdateItemDrag(eventData.position);
+        public void OnEndDrag(PointerEventData eventData) => hud?.EndItemDrag();
+    }
+
+    public sealed class FarmHotbarSlotView : MonoBehaviour, IDropHandler, IPointerClickHandler
+    {
+        private FarmHudController hud;
+        private int slotIndex;
+
+        public void Initialize(FarmHudController owner, int index)
+        {
+            hud = owner;
+            slotIndex = index;
+        }
+
+        public void OnDrop(PointerEventData eventData) => hud?.CompleteItemDrag(slotIndex);
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Right) hud?.ClearHotbarSlot(slotIndex);
+            else if (eventData.button == PointerEventData.InputButton.Left) hud?.SelectHotbarSlot(slotIndex);
+        }
+    }
+}

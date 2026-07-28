@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48b76da4d6194b64c9e5fe2d38481830, type: 3}
+  m_Name: FarmEconomyBalance
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.FarmEconomyBalance
+  Crops:
+  - CropId: carrot
+    SeedPackAmount: 8
+    SeedPackPrice: 24
+    BaseSellPrice: 6
+  - CropId: corn
+    SeedPackAmount: 4
+    SeedPackPrice: 35
+    BaseSellPrice: 22
+  - CropId: pumpkin
+    SeedPackAmount: 5
+    SeedPackPrice: 20
+    BaseSellPrice: 15
+  - CropId: strawberry
+    SeedPackAmount: 6
+    SeedPackPrice: 28
+    BaseSellPrice: 8
+  ToolLevelTwoCost: 150
+  ToolLevelThreeCost: 500
+  LandLevelTwoCost: 500
+  LandLevelThreeCost: 1500
+  DailyOrderRewardMultiplier: 1.6
+  DailyOrderMinimumBonus: 5
+  DailyOrderRounding: 5
+  BoardCompletionBonus: 25
+  WeakChancePercent: 20
+  StrongChancePercent: 30
+  PeakChancePercent: 10
+  WeakMultiplier: 0.85
+  StableMultiplier: 1
+  StrongMultiplier: 1.2
+  PeakMultiplier: 1.45

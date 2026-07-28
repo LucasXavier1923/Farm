@@ -1,0 +1,4 @@
+{
+  "csharpCode":"var plot=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>();var hud=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>();var before=UnityEngine.PlayerPrefs.GetFloat(\"journal_modal_minute\");if(UnityEngine.Mathf.Abs(plot.GameState.MinutesOfDay-before)>0.05f)throw new System.Exception(\"Relógio avançou com diário aberto\");hud.SetJournalOpen(false);UnityEngine.PlayerPrefs.SetFloat(\"journal_modal_minute\",plot.GameState.MinutesOfDay);",
+  "className":"JournalModalStep2","methodName":"Run","parameters":[],"isMethodBody":true
+}

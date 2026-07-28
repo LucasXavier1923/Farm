@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var player = UnityEngine.GameObject.Find(\"Player\"); var station = UnityEngine.GameObject.Find(\"Farm_Sell_Station\"); if (player == null || station == null) throw new System.Exception(\"Player ou estação não encontrados\"); var controller = player.GetComponent<UnityEngine.CharacterController>(); if (controller != null) controller.enabled = false; player.transform.position = station.transform.position + (station.transform.forward * 2f); if (controller != null) controller.enabled = true; UnityEngine.Debug.Log(\"[FARM_SHOP_VISUAL_TEST] Player movido temporariamente para o caixote.\");",
+  "className": "FarmShopVisualTest",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

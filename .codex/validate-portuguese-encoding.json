@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var expectedCrop = \"Ab\" + (char)0x00F3 + \"bora\"; var expectedNot = \"n\" + (char)0x00E3 + \"o\"; if (FarmPrototype.Farming.CropCatalog.Pumpkin.DisplayName != expectedCrop) throw new System.Exception(\"Nome da cultura ainda está corrompido\"); var tile = UnityEngine.Object.FindFirstObjectByType<FarmPrototype.Farming.FarmTestTile>(); if (tile == null || !tile.StatusText.Contains(expectedNot)) throw new System.Exception(\"Status do canteiro ainda está corrompido: \" + (tile == null ? \"NULL\" : tile.StatusText)); var game = UnityEngine.Object.FindFirstObjectByType<FarmPrototype.Farming.FarmGameState>(); var response = tile.Use(FarmPrototype.Farming.FarmTool.Harvest, game); if (!response.Contains(expectedNot)) throw new System.Exception(\"Mensagem de interação ainda está corrompida: \" + response); UnityEngine.Debug.Log(\"[ENCODING_OK] Abóbora | não | ação | inventário | às | jogável\");",
+  "className": "PortugueseEncodingValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

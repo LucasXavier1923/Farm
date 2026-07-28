@@ -1,0 +1,533 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    public enum FarmMilestone { Tilled, Planted, Watered, Harvested, Sold, BoughtSeeds }
+
+    [Serializable]
+    public sealed class FarmTutorialProgress
+    {
+        public bool Tilled;
+        public bool Planted;
+        public bool Watered;
+        public bool Harvested;
+        public bool Sold;
+        public bool BoughtSeeds;
+        public bool RewardClaimed;
+
+        public int CompletedCount =>
+            (Tilled ? 1 : 0) + (Planted ? 1 : 0) + (Watered ? 1 : 0) +
+            (Harvested ? 1 : 0) + (Sold ? 1 : 0) + (BoughtSeeds ? 1 : 0);
+        public bool IsComplete => CompletedCount >= 6;
+
+        public string CurrentObjectiveText
+        {
+            get
+            {
+                if (!Tilled) return "Prepare um canteiro com a enxada.";
+                if (!Planted) return "Plante uma semente no canteiro.";
+                if (!Watered) return "Regue a semente plantada.";
+                if (!Harvested) return "Espere a cultura crescer e colha.";
+                if (!Sold) return "Venda sua colheita no caixote.";
+                if (!BoughtSeeds) return "Compre um pacote de sementes.";
+                return "Primeira colheita conclu\u00EDda!";
+            }
+        }
+
+        public bool Mark(FarmMilestone milestone)
+        {
+            switch (milestone)
+            {
+                case FarmMilestone.Tilled when !Tilled: Tilled = true; return true;
+                case FarmMilestone.Planted when !Planted: Planted = true; return true;
+                case FarmMilestone.Watered when !Watered: Watered = true; return true;
+                case FarmMilestone.Harvested when !Harvested: Harvested = true; return true;
+                case FarmMilestone.Sold when !Sold: Sold = true; return true;
+                case FarmMilestone.BoughtSeeds when !BoughtSeeds: BoughtSeeds = true; return true;
+                default: return false;
+            }
+        }
+
+        public FarmTutorialProgress Clone() => new()
+        {
+            Tilled = Tilled,
+            Planted = Planted,
+            Watered = Watered,
+            Harvested = Harvested,
+            Sold = Sold,
+            BoughtSeeds = BoughtSeeds,
+            RewardClaimed = RewardClaimed
+        };
+    }
+
+    [Serializable]
+    public sealed class InventoryStack
+    {
+        public string ItemId;
+        public int Quantity;
+        public InventoryStack() { }
+        public InventoryStack(string itemId, int quantity) { ItemId = itemId; Quantity = quantity; }
+    }
+
+    [Serializable]
+    public sealed class FarmTileSaveData
+    {
+        public int Index;
+        public int State;
+        public string CropId;
+        public float GrowthSecondsRemaining;
+    }
+
+    [Serializable]
+    public sealed class FarmSaveData
+    {
+        public int Version = 8;
+        public int Money;
+        public List<InventoryStack> Inventory = new();
+        public List<FarmTileSaveData> Tiles = new();
+        public List<string> Hotbar = new();
+        public int SelectedHotbarIndex;
+        public FarmTutorialProgress Tutorial = new();
+        public List<InventoryStack> Storage = new();
+        public List<string> CollectedPickupIds = new();
+        public int DayNumber = 1;
+        public float MinutesOfDay = 480f;
+        public int WorldSeed = FarmGameState.DefaultWorldSeed;
+        public int PumpkinSeeds;
+        public int Pumpkins;
+    }
+
+    public sealed class FarmGameState : MonoBehaviour
+    {
+        public const string PumpkinSeedId = "pumpkin_seed";
+        public const string PumpkinId = "pumpkin";
+        public const string ToolPrefix = "tool:";
+        public const string ItemPrefix = "item:";
+        public const int HotbarSlotCount = 8;
+        public const int DefaultWorldSeed = 7122040;
+
+        private static readonly string[] DefaultHotbarEntries =
+        {
+            "tool:hoe", "item:pumpkin_seed", "tool:watering_can", "tool:harvest", "", "", "", ""
+        };
+
+        [SerializeField] private int money = 100;
+        [SerializeField, Min(1)] private int slotCapacity = 20;
+        [SerializeField] private List<InventoryStack> inventory = new();
+        [SerializeField] private List<string> hotbar = new();
+        [SerializeField] private int selectedHotbarIndex;
+        [SerializeField] private FarmTutorialProgress tutorial = new();
+        [SerializeField, Min(1)] private int storageSlotCapacity = 30;
+        [SerializeField] private List<InventoryStack> storage = new();
+        [SerializeField] private List<string> collectedPickupIds = new();
+        [SerializeField, Min(1)] private int dayNumber = 1;
+        [SerializeField, Range(0f, 1439.99f)] private float minutesOfDay = 480f;
+        [SerializeField] private int worldSeed = DefaultWorldSeed;
+
+        public int Money => money;
+        public int SlotCapacity => slotCapacity;
+        public int UsedSlots => inventory.Count;
+        public IReadOnlyList<InventoryStack> Inventory => inventory;
+        public IReadOnlyList<string> Hotbar => hotbar;
+        public int SelectedHotbarIndex => selectedHotbarIndex;
+        public string SelectedHotbarEntry => GetHotbarEntry(selectedHotbarIndex);
+        public FarmTutorialProgress Tutorial => tutorial;
+        public int StorageSlotCapacity => storageSlotCapacity;
+        public int StorageUsedSlots => storage.Count;
+        public IReadOnlyList<InventoryStack> Storage => storage;
+        public IReadOnlyList<string> CollectedPickupIds => collectedPickupIds;
+        public int DayNumber => dayNumber;
+        public float MinutesOfDay => minutesOfDay;
+        public int WorldSeed => worldSeed;
+        public int PumpkinSeeds => GetQuantity(PumpkinSeedId);
+        public int Pumpkins => GetQuantity(PumpkinId);
+        public event Action Changed;
+
+        private void Awake()
+        {
+            if (inventory.Count == 0) AddInternal(PumpkinSeedId, 12);
+            EnsureHotbar();
+        }
+
+        public int GetQuantity(string itemId)
+        {
+            var total = 0;
+            foreach (var stack in inventory)
+                if (string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) total += stack.Quantity;
+            return total;
+        }
+
+        public bool CanAdd(string itemId, int amount)
+        {
+            if (amount <= 0) return true;
+            var item = FarmContentDatabase.GetItem(itemId);
+            var maxStack = item != null ? Mathf.Max(1, item.MaxStack) : 99;
+            var free = (slotCapacity - inventory.Count) * maxStack;
+            foreach (var stack in inventory)
+                if (string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) free += maxStack - stack.Quantity;
+            return free >= amount;
+        }
+
+        public bool AddItem(string itemId, int amount)
+        {
+            if (string.IsNullOrWhiteSpace(itemId) || amount <= 0 || !CanAdd(itemId, amount)) return false;
+            AddInternal(itemId, amount);
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TryRemoveItem(string itemId, int amount)
+        {
+            if (amount <= 0) return true;
+            if (GetQuantity(itemId) < amount) return false;
+            for (var index = inventory.Count - 1; index >= 0 && amount > 0; index--)
+            {
+                var stack = inventory[index];
+                if (!string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) continue;
+                var removed = Mathf.Min(stack.Quantity, amount);
+                stack.Quantity -= removed;
+                amount -= removed;
+                if (stack.Quantity <= 0) inventory.RemoveAt(index);
+            }
+            NotifyChanged();
+            return true;
+        }
+
+        public string GetHotbarEntry(int index)
+        {
+            EnsureHotbar();
+            return index >= 0 && index < hotbar.Count ? hotbar[index] ?? string.Empty : string.Empty;
+        }
+
+        public bool AssignHotbarSlot(int index, string entry)
+        {
+            EnsureHotbar();
+            if (index < 0 || index >= HotbarSlotCount || !IsValidHotbarEntry(entry)) return false;
+            entry ??= string.Empty;
+            if (string.Equals(hotbar[index], entry, StringComparison.OrdinalIgnoreCase)) return true;
+            hotbar[index] = entry;
+            NotifyChanged();
+            return true;
+        }
+
+        public void ClearHotbarSlot(int index)
+        {
+            if (index < 0 || index >= HotbarSlotCount) return;
+            EnsureHotbar();
+            if (string.IsNullOrEmpty(hotbar[index])) return;
+            hotbar[index] = string.Empty;
+            NotifyChanged();
+        }
+
+        public bool SelectHotbarSlot(int index)
+        {
+            EnsureHotbar();
+            if (index < 0 || index >= HotbarSlotCount) return false;
+            if (selectedHotbarIndex == index) return true;
+            selectedHotbarIndex = index;
+            NotifyChanged();
+            return true;
+        }
+
+        public int GetStorageQuantity(string itemId)
+        {
+            var total = 0;
+            foreach (var stack in storage)
+                if (string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) total += stack.Quantity;
+            return total;
+        }
+
+        public bool TransferToStorage(string itemId, int amount)
+        {
+            if (string.IsNullOrWhiteSpace(itemId) || amount <= 0 || GetQuantity(itemId) < amount || !CanAddToStorage(itemId, amount)) return false;
+            RemoveFromList(inventory, itemId, amount);
+            AddToStorageInternal(itemId, amount);
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TransferFromStorage(string itemId, int amount)
+        {
+            if (string.IsNullOrWhiteSpace(itemId) || amount <= 0 || GetStorageQuantity(itemId) < amount || !CanAdd(itemId, amount)) return false;
+            RemoveFromList(storage, itemId, amount);
+            AddInternal(itemId, amount);
+            NotifyChanged();
+            return true;
+        }
+
+        public bool IsPickupCollected(string pickupId)
+        {
+            if (string.IsNullOrWhiteSpace(pickupId)) return false;
+            foreach (var collectedId in collectedPickupIds)
+                if (string.Equals(collectedId, pickupId, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        public bool TryCollectPickup(string pickupId, string itemId, int amount)
+        {
+            if (string.IsNullOrWhiteSpace(pickupId) || string.IsNullOrWhiteSpace(itemId) || amount <= 0) return false;
+            if (IsPickupCollected(pickupId) || !CanAdd(itemId, amount)) return false;
+            AddInternal(itemId, amount);
+            collectedPickupIds.Add(pickupId);
+            NotifyChanged();
+            return true;
+        }
+
+        public bool AdvanceClock(float gameMinutes, bool notify = false)
+        {
+            var previousDay = dayNumber;
+            var totalMinutes = Mathf.Max(0f, ((dayNumber - 1) * 1440f) + minutesOfDay + gameMinutes);
+            dayNumber = Mathf.FloorToInt(totalMinutes / 1440f) + 1;
+            minutesOfDay = Mathf.Repeat(totalMinutes, 1440f);
+            if (notify) NotifyChanged();
+            return dayNumber != previousDay;
+        }
+
+        public void SetClock(int day, float minute, bool notify = false)
+        {
+            var totalMinutes = Mathf.Max(0f, ((Mathf.Max(1, day) - 1) * 1440f) + minute);
+            dayNumber = Mathf.FloorToInt(totalMinutes / 1440f) + 1;
+            minutesOfDay = Mathf.Repeat(totalMinutes, 1440f);
+            if (notify) NotifyChanged();
+        }
+
+        public void SetWorldSeed(int seed, bool notify = false)
+        {
+            worldSeed = seed == 0 ? DefaultWorldSeed : seed;
+            if (notify) NotifyChanged();
+        }
+
+        public bool MarkMilestone(FarmMilestone milestone)
+        {
+            tutorial ??= new FarmTutorialProgress();
+            if (!tutorial.Mark(milestone)) return false;
+            if (tutorial.IsComplete && !tutorial.RewardClaimed)
+            {
+                tutorial.RewardClaimed = true;
+                money += 50;
+            }
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TrySellAll(CropDefinition crop, out int quantity, out int earned)
+        {
+            quantity = crop != null && crop.HarvestItem != null ? GetQuantity(crop.HarvestItem.Id) : 0;
+            var unitPrice = crop != null && crop.HarvestItem != null ? crop.HarvestItem.BaseSellPrice : 0;
+            earned = quantity * unitPrice;
+            if (quantity <= 0 || !TryRemoveItem(crop.HarvestItem.Id, quantity)) return false;
+            money += earned;
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TryBuySeedPack(CropDefinition crop, out int amount, out int cost)
+        {
+            amount = crop != null ? crop.SeedPackAmount : 0;
+            cost = crop != null ? crop.SeedPackPrice : 0;
+            if (crop == null || crop.SeedItem == null || amount <= 0 || money < cost || !CanAdd(crop.SeedItem.Id, amount)) return false;
+            money -= cost;
+            AddInternal(crop.SeedItem.Id, amount);
+            NotifyChanged();
+            return true;
+        }
+
+        public bool TryConsumePumpkinSeed() => TryRemoveItem(PumpkinSeedId, 1);
+        public void AddPumpkins(int amount) => AddItem(PumpkinId, amount);
+        public bool TrySellAllPumpkins(out int quantity, out int earned) => TrySellAll(FarmContentDatabase.GetCrop(PumpkinId), out quantity, out earned);
+        public bool TryBuyPumpkinSeedPack(out int amount, out int cost) => TryBuySeedPack(FarmContentDatabase.GetCrop(PumpkinId), out amount, out cost);
+
+        public FarmSaveData CreateSaveData(List<FarmTileSaveData> tiles)
+        {
+            EnsureHotbar();
+            var stacks = new List<InventoryStack>(inventory.Count);
+            foreach (var stack in inventory) stacks.Add(new InventoryStack(stack.ItemId, stack.Quantity));
+            return new FarmSaveData
+            {
+                Version = 8,
+                Money = money,
+                Inventory = stacks,
+                Tiles = tiles ?? new List<FarmTileSaveData>(),
+                Hotbar = new List<string>(hotbar),
+                SelectedHotbarIndex = selectedHotbarIndex,
+                Tutorial = (tutorial ?? new FarmTutorialProgress()).Clone(),
+                Storage = CloneStacks(storage),
+                CollectedPickupIds = new List<string>(collectedPickupIds),
+                DayNumber = dayNumber,
+                MinutesOfDay = minutesOfDay,
+                WorldSeed = worldSeed,
+                PumpkinSeeds = PumpkinSeeds,
+                Pumpkins = Pumpkins
+            };
+        }
+
+        public void Restore(FarmSaveData data)
+        {
+            if (data == null) return;
+            money = Mathf.Max(0, data.Money);
+            inventory.Clear();
+            if (data.Version >= 2 && data.Inventory != null && data.Inventory.Count > 0)
+            {
+                foreach (var stack in data.Inventory)
+                    if (stack != null && stack.Quantity > 0 && !string.IsNullOrWhiteSpace(stack.ItemId)) AddInternal(stack.ItemId, stack.Quantity);
+            }
+            else
+            {
+                if (data.PumpkinSeeds > 0) AddInternal(PumpkinSeedId, data.PumpkinSeeds);
+                if (data.Pumpkins > 0) AddInternal(PumpkinId, data.Pumpkins);
+            }
+
+            hotbar.Clear();
+            if (data.Version >= 3 && data.Hotbar != null && data.Hotbar.Count > 0)
+            {
+                for (var index = 0; index < HotbarSlotCount; index++)
+                {
+                    var entry = index < data.Hotbar.Count ? data.Hotbar[index] : string.Empty;
+                    hotbar.Add(IsValidHotbarEntry(entry) ? entry ?? string.Empty : string.Empty);
+                }
+                selectedHotbarIndex = Mathf.Clamp(data.SelectedHotbarIndex, 0, HotbarSlotCount - 1);
+            }
+            else ResetHotbarToDefaults();
+            tutorial = data.Version >= 4 && data.Tutorial != null ? data.Tutorial.Clone() : new FarmTutorialProgress();
+            storage.Clear();
+            if (data.Version >= 5 && data.Storage != null)
+                foreach (var stack in data.Storage)
+                    if (stack != null && stack.Quantity > 0 && !string.IsNullOrWhiteSpace(stack.ItemId)) AddToStorageInternal(stack.ItemId, stack.Quantity);
+            collectedPickupIds.Clear();
+            if (data.Version >= 6 && data.CollectedPickupIds != null)
+                foreach (var pickupId in data.CollectedPickupIds)
+                    if (!string.IsNullOrWhiteSpace(pickupId) && !IsPickupCollected(pickupId)) collectedPickupIds.Add(pickupId);
+            if (data.Version >= 7) SetClock(data.DayNumber, data.MinutesOfDay);
+            else SetClock(1, 480f);
+            SetWorldSeed(data.Version >= 8 ? data.WorldSeed : DefaultWorldSeed);
+            NotifyChanged();
+        }
+
+        private void EnsureHotbar()
+        {
+            if (hotbar.Count == HotbarSlotCount) return;
+            if (hotbar.Count == 0) { ResetHotbarToDefaults(); return; }
+            while (hotbar.Count < HotbarSlotCount) hotbar.Add(string.Empty);
+            if (hotbar.Count > HotbarSlotCount) hotbar.RemoveRange(HotbarSlotCount, hotbar.Count - HotbarSlotCount);
+            selectedHotbarIndex = Mathf.Clamp(selectedHotbarIndex, 0, HotbarSlotCount - 1);
+        }
+
+        private void ResetHotbarToDefaults()
+        {
+            hotbar.Clear();
+            hotbar.AddRange(DefaultHotbarEntries);
+            selectedHotbarIndex = 0;
+        }
+
+        private static bool IsValidHotbarEntry(string entry)
+        {
+            if (string.IsNullOrWhiteSpace(entry)) return true;
+            if (entry.StartsWith(ItemPrefix, StringComparison.OrdinalIgnoreCase)) return FarmContentDatabase.GetItem(entry[ItemPrefix.Length..]) != null;
+            if (!entry.StartsWith(ToolPrefix, StringComparison.OrdinalIgnoreCase)) return false;
+            var toolId = entry[ToolPrefix.Length..];
+            return toolId is "hoe" or "watering_can" or "harvest";
+        }
+
+        private void AddInternal(string itemId, int amount)
+        {
+            var item = FarmContentDatabase.GetItem(itemId);
+            var maxStack = item != null ? Mathf.Max(1, item.MaxStack) : 99;
+            foreach (var stack in inventory)
+            {
+                if (!string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase) || stack.Quantity >= maxStack) continue;
+                var moved = Mathf.Min(maxStack - stack.Quantity, amount);
+                stack.Quantity += moved;
+                amount -= moved;
+                if (amount <= 0) return;
+            }
+            while (amount > 0 && inventory.Count < slotCapacity)
+            {
+                var moved = Mathf.Min(maxStack, amount);
+                inventory.Add(new InventoryStack(itemId, moved));
+                amount -= moved;
+            }
+        }
+
+        private bool CanAddToStorage(string itemId, int amount)
+        {
+            var item = FarmContentDatabase.GetItem(itemId);
+            var maxStack = item != null ? Mathf.Max(1, item.MaxStack) : 99;
+            var free = (storageSlotCapacity - storage.Count) * maxStack;
+            foreach (var stack in storage)
+                if (string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) free += maxStack - stack.Quantity;
+            return free >= amount;
+        }
+
+        private void AddToStorageInternal(string itemId, int amount)
+        {
+            var item = FarmContentDatabase.GetItem(itemId);
+            var maxStack = item != null ? Mathf.Max(1, item.MaxStack) : 99;
+            foreach (var stack in storage)
+            {
+                if (!string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase) || stack.Quantity >= maxStack) continue;
+                var moved = Mathf.Min(maxStack - stack.Quantity, amount);
+                stack.Quantity += moved;
+                amount -= moved;
+                if (amount <= 0) return;
+            }
+            while (amount > 0 && storage.Count < storageSlotCapacity)
+            {
+                var moved = Mathf.Min(maxStack, amount);
+                storage.Add(new InventoryStack(itemId, moved));
+                amount -= moved;
+            }
+        }
+
+        private static void RemoveFromList(List<InventoryStack> stacks, string itemId, int amount)
+        {
+            for (var index = stacks.Count - 1; index >= 0 && amount > 0; index--)
+            {
+                var stack = stacks[index];
+                if (!string.Equals(stack.ItemId, itemId, StringComparison.OrdinalIgnoreCase)) continue;
+                var removed = Mathf.Min(stack.Quantity, amount);
+                stack.Quantity -= removed;
+                amount -= removed;
+                if (stack.Quantity <= 0) stacks.RemoveAt(index);
+            }
+        }
+
+        private static List<InventoryStack> CloneStacks(List<InventoryStack> source)
+        {
+            var result = new List<InventoryStack>(source.Count);
+            foreach (var stack in source) result.Add(new InventoryStack(stack.ItemId, stack.Quantity));
+            return result;
+        }
+
+        private void NotifyChanged() => Changed?.Invoke();
+    }
+
+    public static class FarmSaveSystem
+    {
+        private const string SaveFileName = "farm-prototype-save.json";
+        public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+
+        public static bool Save(FarmSaveData data, out string error)
+        {
+            try { File.WriteAllText(SavePath, JsonUtility.ToJson(data, true)); error = null; return true; }
+            catch (Exception exception) { error = exception.Message; return false; }
+        }
+
+        public static bool TryLoad(out FarmSaveData data, out string error)
+        {
+            data = null;
+            error = null;
+            try
+            {
+                if (!File.Exists(SavePath)) return false;
+                data = JsonUtility.FromJson<FarmSaveData>(File.ReadAllText(SavePath));
+                if (data != null) return true;
+                error = "O arquivo de save est\u00E1 vazio ou inv\u00E1lido.";
+                return false;
+            }
+            catch (Exception exception) { error = exception.Message; return false; }
+        }
+    }
+}

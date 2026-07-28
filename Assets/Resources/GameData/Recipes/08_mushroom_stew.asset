@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f70fa19b7cace7478de183aa7fe5c0b, type: 3}
+  m_Name: 08_mushroom_stew
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.CraftingRecipe
+  Id: 08_mushroom_stew
+  DisplayName: Mushroom Stew
+  Description: A hearty forest meal that restores a full afternoon of energy.
+  RequiresDiscovery: 1
+  Ingredients:
+  - Item: {fileID: 11400000, guid: 31bbfd2785dcf3b4e86c821571b8bd0a, type: 2}
+    Quantity: 2
+  - Item: {fileID: 11400000, guid: de72e3b5ee9f8a9498374f5c7004b102, type: 2}
+    Quantity: 1
+  OutputItem: {fileID: 11400000, guid: 0e6442355c5c1ef4e9ce1c63d32c5094, type: 2}
+  OutputQuantity: 1
+  PreviewPrefab: {fileID: 0}
+  RequiredMastery: 1
+  RequiredMasteryLevel: 1

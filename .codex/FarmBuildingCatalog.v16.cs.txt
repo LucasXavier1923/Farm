@@ -1,0 +1,513 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+namespace FarmPrototype.Farming
+{
+    public sealed class FarmBuildingCatalog : MonoBehaviour
+    {
+        private const int CardsPerPage = 4;
+        private static readonly Color OverlayColor = new(0.012f, 0.018f, 0.01f, 0.78f);
+        private static readonly Color PanelColor = new(0.055f, 0.078f, 0.045f, 0.98f);
+        private static readonly Color CardColor = new(0.105f, 0.14f, 0.085f, 1f);
+        private static readonly Color AccentColor = new(0.96f, 0.70f, 0.22f, 1f);
+        private static readonly Color ActiveCategoryColor = new(0.28f, 0.48f, 0.16f, 1f);
+        private static readonly Color InactiveCategoryColor = new(0.13f, 0.18f, 0.105f, 1f);
+
+        private readonly List<FarmBuildableDefinition> filtered = new();
+        private readonly FarmBuildableDefinition[] visibleDefinitions = new FarmBuildableDefinition[CardsPerPage];
+        private readonly GameObject[] cardRoots = new GameObject[CardsPerPage];
+        private readonly Text[] cardIcons = new Text[CardsPerPage];
+        private readonly Text[] cardCategories = new Text[CardsPerPage];
+        private readonly Text[] cardNames = new Text[CardsPerPage];
+        private readonly Text[] cardDescriptions = new Text[CardsPerPage];
+        private readonly Text[] cardCosts = new Text[CardsPerPage];
+        private readonly Button[] cardButtons = new Button[CardsPerPage];
+        private readonly Text[] cardButtonLabels = new Text[CardsPerPage];
+        private readonly Button[] categoryButtons = new Button[5];
+        private readonly Image[] categoryBackgrounds = new Image[5];
+
+        private FarmBuildingSystem building;
+        private FarmGameState state;
+        private FarmHudController hud;
+        private Canvas canvas;
+        private Font font;
+        private GameObject window;
+        private CanvasGroup windowGroup;
+        private InputField searchInput;
+        private Text resultText;
+        private Text emptyText;
+        private Text pageText;
+        private Button previousPageButton;
+        private Button nextPageButton;
+        private FarmBuildableCategory? selectedCategory;
+        private int currentPage;
+
+        public bool IsOpen { get; private set; }
+        public int FilteredCount => filtered.Count;
+        public int VisibleCardCount { get; private set; }
+        public int CurrentPage => currentPage;
+        public string SearchText => searchInput != null ? searchInput.text : string.Empty;
+        public string SelectedCategoryName => selectedCategory.HasValue
+            ? CategoryLabel(selectedCategory.Value)
+            : "TODOS";
+
+        public void Initialize(
+            FarmBuildingSystem owner,
+            FarmGameState gameState,
+            FarmHudController ownerHud,
+            Canvas ownerCanvas)
+        {
+            if (window != null) return;
+            building = owner;
+            state = gameState;
+            hud = ownerHud;
+            canvas = ownerCanvas;
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            CreateInterface();
+            if (state != null) state.Changed += HandleStateChanged;
+        }
+
+        private void Update()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+
+            if (IsOpen)
+            {
+                if (keyboard.escapeKey.wasPressedThisFrame || keyboard.bKey.wasPressedThisFrame)
+                    Close();
+                return;
+            }
+
+            if (!FarmHudController.IsModalOpen && building != null && !building.IsPlacing &&
+                keyboard.bKey.wasPressedThisFrame)
+                Open();
+        }
+
+        private void OnDisable() => Close();
+
+        private void OnDestroy()
+        {
+            if (state != null) state.Changed -= HandleStateChanged;
+            if (IsOpen && hud != null) hud.SetBuildingCatalogOpen(false);
+        }
+
+        public bool Open()
+        {
+            if (IsOpen || building == null || state == null || FarmHudController.IsModalOpen || building.IsPlacing)
+                return false;
+            if (FarmBuildableDatabase.Definitions.Count == 0)
+            {
+                hud?.ShowSystemToast("O cat\u00E1logo de constru\u00E7\u00E3o est\u00E1 vazio.", true);
+                return false;
+            }
+
+            IsOpen = true;
+            selectedCategory = null;
+            currentPage = 0;
+            if (searchInput != null) searchInput.SetTextWithoutNotify(string.Empty);
+            SetCanvasGroup(windowGroup, true);
+            window.transform.SetAsLastSibling();
+            hud?.SetBuildingCatalogOpen(true);
+            RefreshCatalog();
+            if (EventSystem.current != null && searchInput != null)
+                EventSystem.current.SetSelectedGameObject(searchInput.gameObject);
+            return true;
+        }
+
+        public void Close()
+        {
+            if (!IsOpen) return;
+            IsOpen = false;
+            SetCanvasGroup(windowGroup, false);
+            if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null &&
+                EventSystem.current.currentSelectedGameObject.transform.IsChildOf(window.transform))
+                EventSystem.current.SetSelectedGameObject(null);
+            hud?.SetBuildingCatalogOpen(false);
+        }
+
+        public void SetSearchForTesting(string value)
+        {
+            if (searchInput != null) searchInput.SetTextWithoutNotify(value ?? string.Empty);
+            currentPage = 0;
+            RefreshCatalog();
+        }
+
+        public void SetCategoryForTesting(FarmBuildableCategory? category)
+        {
+            selectedCategory = category;
+            currentPage = 0;
+            RefreshCatalog();
+        }
+
+        public bool SelectDefinitionForTesting(string itemId)
+        {
+            foreach (var definition in FarmBuildableDatabase.Definitions)
+                if (definition != null && definition.KitItem != null &&
+                    string.Equals(definition.KitItem.Id, itemId, StringComparison.OrdinalIgnoreCase))
+                    return SelectDefinition(definition);
+            return false;
+        }
+
+        public void RefreshCatalog()
+        {
+            if (state == null || cardRoots[0] == null) return;
+            filtered.Clear();
+            var query = Normalize(SearchText.Trim());
+            foreach (var definition in FarmBuildableDatabase.Definitions)
+            {
+                if (definition == null || definition.KitItem == null) continue;
+                if (selectedCategory.HasValue && definition.Category != selectedCategory.Value) continue;
+                if (!string.IsNullOrEmpty(query))
+                {
+                    var searchable = Normalize(
+                        $"{definition.DisplayName} {definition.Description} " +
+                        $"{definition.KitItem.DisplayName} {CategoryLabel(definition.Category)}");
+                    if (!searchable.Contains(query)) continue;
+                }
+                filtered.Add(definition);
+            }
+
+            var pageCount = Mathf.Max(1, Mathf.CeilToInt(filtered.Count / (float)CardsPerPage));
+            currentPage = Mathf.Clamp(currentPage, 0, pageCount - 1);
+            VisibleCardCount = 0;
+
+            for (var index = 0; index < CardsPerPage; index++)
+            {
+                var definitionIndex = currentPage * CardsPerPage + index;
+                var visible = definitionIndex < filtered.Count;
+                cardRoots[index].SetActive(visible);
+                visibleDefinitions[index] = visible ? filtered[definitionIndex] : null;
+                if (!visible) continue;
+                VisibleCardCount++;
+                RefreshCard(index, filtered[definitionIndex]);
+            }
+
+            resultText.text = $"{filtered.Count} projeto{(filtered.Count == 1 ? string.Empty : "s")} encontrado{(filtered.Count == 1 ? string.Empty : "s")}";
+            pageText.text = $"P\u00C1GINA {currentPage + 1}/{pageCount}";
+            previousPageButton.interactable = currentPage > 0;
+            nextPageButton.interactable = currentPage + 1 < pageCount;
+            emptyText.gameObject.SetActive(filtered.Count == 0);
+            RefreshCategoryButtons();
+        }
+
+        private void RefreshCard(int index, FarmBuildableDefinition definition)
+        {
+            var available = state.GetQuantity(definition.KitItem.Id);
+            cardIcons[index].text = IconLabel(definition);
+            cardIcons[index].color = CategoryColor(definition.Category);
+            cardCategories[index].text = CategoryLabel(definition.Category);
+            cardCategories[index].color = CategoryColor(definition.Category);
+            cardNames[index].text = definition.DisplayName.ToUpperInvariant();
+            cardDescriptions[index].text = string.IsNullOrWhiteSpace(definition.Description)
+                ? "Projeto pronto para posicionar na fazenda."
+                : definition.Description;
+            cardCosts[index].text = $"CUSTO  1 KIT   \u2022   MOCHILA x{available}";
+            cardCosts[index].color = available > 0 ? new Color(0.68f, 0.92f, 0.54f) : new Color(1f, 0.48f, 0.30f);
+            cardButtons[index].interactable = available > 0;
+            cardButtonLabels[index].text = available > 0 ? "COLOCAR" : "SEM KIT";
+        }
+
+        private void SelectVisibleCard(int index)
+        {
+            if (index < 0 || index >= visibleDefinitions.Length || visibleDefinitions[index] == null) return;
+            SelectDefinition(visibleDefinitions[index]);
+        }
+
+        private bool SelectDefinition(FarmBuildableDefinition definition)
+        {
+            if (!IsOpen || definition == null || definition.KitItem == null) return false;
+            var available = state.GetQuantity(definition.KitItem.Id);
+            if (available <= 0)
+            {
+                hud?.ShowSystemToast(
+                    $"Voc\u00EA precisa fabricar {definition.KitItem.DisplayName} na bancada.", true);
+                return false;
+            }
+
+            var itemId = definition.KitItem.Id;
+            Close();
+            return building.BeginPlacement(itemId);
+        }
+
+        private void SetCategory(FarmBuildableCategory? category)
+        {
+            selectedCategory = category;
+            currentPage = 0;
+            RefreshCatalog();
+        }
+
+        private void ChangePage(int direction)
+        {
+            currentPage += direction;
+            RefreshCatalog();
+        }
+
+        private void HandleSearchChanged(string value)
+        {
+            currentPage = 0;
+            RefreshCatalog();
+        }
+
+        private void HandleStateChanged()
+        {
+            if (IsOpen) RefreshCatalog();
+        }
+
+        private void RefreshCategoryButtons()
+        {
+            for (var index = 0; index < categoryBackgrounds.Length; index++)
+            {
+                var active = index == 0 ? !selectedCategory.HasValue :
+                    selectedCategory.HasValue && (int)selectedCategory.Value == index - 1;
+                categoryBackgrounds[index].color = active ? ActiveCategoryColor : InactiveCategoryColor;
+            }
+        }
+
+        private void CreateInterface()
+        {
+            window = CreatePanel(
+                "BuildingCatalogWindow", canvas.transform,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Vector2.zero, OverlayColor);
+            windowGroup = window.AddComponent<CanvasGroup>();
+            var panel = CreatePanel(
+                "BuildingCatalogPanel", window.transform,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                Vector2.zero, new Vector2(1120f, 760f), new Vector2(0.5f, 0.5f), PanelColor);
+
+            CreateText(
+                "Title", panel.transform, "CAT\u00C1LOGO DE CONSTRU\u00C7\u00C3O", 27, FontStyle.Bold,
+                AccentColor, new Vector2(30f, -20f), new Vector2(700f, 38f), TextAnchor.MiddleLeft);
+            CreateText(
+                "Subtitle", panel.transform, "Escolha um projeto. O kit s\u00F3 \u00E9 gasto ap\u00F3s confirmar um local v\u00E1lido.", 14,
+                FontStyle.Normal, new Color(0.72f, 0.80f, 0.68f),
+                new Vector2(32f, -58f), new Vector2(750f, 25f), TextAnchor.MiddleLeft);
+            var close = CreateButton(
+                "CloseCatalog", panel.transform, "FECHAR  [B/ESC]",
+                new Vector2(900f, -22f), new Vector2(190f, 44f));
+            close.onClick.AddListener(Close);
+
+            var searchPanel = CreatePanel(
+                "SearchPanel", panel.transform,
+                new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(30f, -100f), new Vector2(500f, 48f), new Vector2(0f, 1f),
+                new Color(0.075f, 0.10f, 0.065f, 1f));
+            searchInput = searchPanel.AddComponent<InputField>();
+            var searchText = CreateText(
+                "Text", searchPanel.transform, string.Empty, 16, FontStyle.Normal, Color.white,
+                new Vector2(16f, -5f), new Vector2(468f, 38f), TextAnchor.MiddleLeft);
+            var placeholder = CreateText(
+                "Placeholder", searchPanel.transform, "Buscar por nome, fun\u00E7\u00E3o ou categoria...", 16,
+                FontStyle.Italic, new Color(0.48f, 0.56f, 0.44f),
+                new Vector2(16f, -5f), new Vector2(468f, 38f), TextAnchor.MiddleLeft);
+            searchInput.textComponent = searchText;
+            searchInput.placeholder = placeholder;
+            searchInput.targetGraphic = searchPanel.GetComponent<Image>();
+            searchInput.characterLimit = 40;
+            searchInput.onValueChanged.AddListener(HandleSearchChanged);
+
+            resultText = CreateText(
+                "ResultCount", panel.transform, string.Empty, 14, FontStyle.Bold,
+                new Color(0.72f, 0.82f, 0.66f), new Vector2(555f, -110f),
+                new Vector2(535f, 30f), TextAnchor.MiddleRight);
+
+            var categoryLabels = new[] { "TODOS", "LAVOURA", "AUTOMA\u00C7\u00C3O", "CERCAS", "DECORA\u00C7\u00C3O" };
+            for (var index = 0; index < categoryLabels.Length; index++)
+            {
+                var captured = index;
+                categoryButtons[index] = CreateButton(
+                    $"Category_{categoryLabels[index]}", panel.transform, categoryLabels[index],
+                    new Vector2(30f + index * 212f, -164f), new Vector2(196f, 42f));
+                categoryBackgrounds[index] = categoryButtons[index].GetComponent<Image>();
+                categoryButtons[index].onClick.AddListener(() =>
+                    SetCategory(captured == 0 ? null : (FarmBuildableCategory?)(captured - 1)));
+            }
+
+            for (var index = 0; index < CardsPerPage; index++)
+            {
+                var captured = index;
+                var column = index % 2;
+                var row = index / 2;
+                var card = CreatePanel(
+                    $"BuildableCard_{index + 1}", panel.transform,
+                    new Vector2(0f, 1f), new Vector2(0f, 1f),
+                    new Vector2(30f + column * 535f, -225f - row * 200f),
+                    new Vector2(520f, 180f), new Vector2(0f, 1f), CardColor);
+                cardRoots[index] = card;
+
+                var iconPanel = CreatePanel(
+                    "Icon", card.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                    new Vector2(18f, -42f), new Vector2(94f, 94f), new Vector2(0f, 1f),
+                    new Color(0.06f, 0.085f, 0.05f, 1f));
+                cardIcons[index] = CreateText(
+                    "Letters", iconPanel.transform, "---", 23, FontStyle.Bold, AccentColor,
+                    Vector2.zero, new Vector2(94f, 94f), TextAnchor.MiddleCenter);
+                cardIcons[index].rectTransform.anchorMin = Vector2.zero;
+                cardIcons[index].rectTransform.anchorMax = Vector2.one;
+                cardIcons[index].rectTransform.offsetMin = Vector2.zero;
+                cardIcons[index].rectTransform.offsetMax = Vector2.zero;
+
+                cardCategories[index] = CreateText(
+                    "Category", card.transform, string.Empty, 12, FontStyle.Bold,
+                    AccentColor, new Vector2(128f, -16f), new Vector2(365f, 20f), TextAnchor.MiddleLeft);
+                cardNames[index] = CreateText(
+                    "Name", card.transform, string.Empty, 19, FontStyle.Bold,
+                    Color.white, new Vector2(128f, -39f), new Vector2(365f, 27f), TextAnchor.MiddleLeft);
+                cardDescriptions[index] = CreateText(
+                    "Description", card.transform, string.Empty, 13, FontStyle.Normal,
+                    new Color(0.75f, 0.82f, 0.70f), new Vector2(128f, -70f),
+                    new Vector2(365f, 45f), TextAnchor.UpperLeft);
+                cardCosts[index] = CreateText(
+                    "Cost", card.transform, string.Empty, 13, FontStyle.Bold,
+                    Color.white, new Vector2(18f, -145f), new Vector2(305f, 24f), TextAnchor.MiddleLeft);
+                cardButtons[index] = CreateButton(
+                    "Place", card.transform, "COLOCAR",
+                    new Vector2(360f, -126f), new Vector2(142f, 40f));
+                cardButtonLabels[index] = cardButtons[index].GetComponentInChildren<Text>();
+                cardButtons[index].onClick.AddListener(() => SelectVisibleCard(captured));
+            }
+
+            emptyText = CreateText(
+                "Empty", panel.transform,
+                "NENHUM PROJETO ENCONTRADO\nLimpe a busca ou escolha outra categoria.",
+                19, FontStyle.Bold, new Color(0.72f, 0.78f, 0.66f),
+                new Vector2(210f, -345f), new Vector2(700f, 80f), TextAnchor.MiddleCenter);
+
+            previousPageButton = CreateButton(
+                "PreviousPage", panel.transform, "<",
+                new Vector2(410f, -690f), new Vector2(64f, 42f));
+            previousPageButton.onClick.AddListener(() => ChangePage(-1));
+            pageText = CreateText(
+                "Page", panel.transform, "P\u00C1GINA 1/1", 14, FontStyle.Bold,
+                new Color(0.72f, 0.82f, 0.66f), new Vector2(484f, -690f),
+                new Vector2(152f, 42f), TextAnchor.MiddleCenter);
+            nextPageButton = CreateButton(
+                "NextPage", panel.transform, ">",
+                new Vector2(646f, -690f), new Vector2(64f, 42f));
+            nextPageButton.onClick.AddListener(() => ChangePage(1));
+
+            SetCanvasGroup(windowGroup, false);
+        }
+
+        private Button CreateButton(string name, Transform parent, string label, Vector2 position, Vector2 size)
+        {
+            var buttonObject = CreatePanel(
+                name, parent, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                position, size, new Vector2(0f, 1f), InactiveCategoryColor);
+            var button = buttonObject.AddComponent<Button>();
+            button.targetGraphic = buttonObject.GetComponent<Image>();
+            var labelText = CreateText(
+                "Label", buttonObject.transform, label, 13, FontStyle.Bold,
+                Color.white, Vector2.zero, size, TextAnchor.MiddleCenter);
+            labelText.rectTransform.anchorMin = Vector2.zero;
+            labelText.rectTransform.anchorMax = Vector2.one;
+            labelText.rectTransform.offsetMin = Vector2.zero;
+            labelText.rectTransform.offsetMax = Vector2.zero;
+            return button;
+        }
+
+        private static GameObject CreatePanel(
+            string name,
+            Transform parent,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Vector2 position,
+            Vector2 size,
+            Vector2 pivot,
+            Color color)
+        {
+            var panel = new GameObject(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            panel.GetComponent<Image>().color = color;
+            return panel;
+        }
+
+        private Text CreateText(
+            string name,
+            Transform parent,
+            string content,
+            int size,
+            FontStyle style,
+            Color color,
+            Vector2 position,
+            Vector2 dimensions,
+            TextAnchor alignment)
+        {
+            var item = new GameObject(name, typeof(RectTransform), typeof(Text));
+            item.transform.SetParent(parent, false);
+            var rect = item.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = dimensions;
+            var text = item.GetComponent<Text>();
+            text.font = font;
+            text.text = content;
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = alignment;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            return text;
+        }
+
+        private static void SetCanvasGroup(CanvasGroup group, bool visible)
+        {
+            if (group == null) return;
+            group.alpha = visible ? 1f : 0f;
+            group.interactable = visible;
+            group.blocksRaycasts = visible;
+        }
+
+        private static string CategoryLabel(FarmBuildableCategory category) => category switch
+        {
+            FarmBuildableCategory.Farming => "LAVOURA",
+            FarmBuildableCategory.Automation => "AUTOMA\u00C7\u00C3O",
+            FarmBuildableCategory.Fences => "CERCAS",
+            FarmBuildableCategory.Decoration => "DECORA\u00C7\u00C3O",
+            _ => "PROJETO"
+        };
+
+        private static Color CategoryColor(FarmBuildableCategory category) => category switch
+        {
+            FarmBuildableCategory.Farming => new Color(0.72f, 0.90f, 0.34f),
+            FarmBuildableCategory.Automation => new Color(0.30f, 0.82f, 1f),
+            FarmBuildableCategory.Fences => new Color(1f, 0.66f, 0.28f),
+            FarmBuildableCategory.Decoration => new Color(0.92f, 0.46f, 0.78f),
+            _ => Color.white
+        };
+
+        private static string IconLabel(FarmBuildableDefinition definition) => definition.Function switch
+        {
+            FarmBuildableFunction.Scarecrow => "ESP",
+            FarmBuildableFunction.Sprinkler => "ASP",
+            FarmBuildableFunction.Fence => "CER",
+            _ => "OBJ"
+        };
+
+        private static string Normalize(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            var decomposed = value.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+            var result = new StringBuilder(decomposed.Length);
+            foreach (var character in decomposed)
+                if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+                    result.Append(character);
+            return result.ToString().Normalize(NormalizationForm.FormC);
+        }
+    }
+}

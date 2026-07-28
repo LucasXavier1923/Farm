@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917014aa787fe8b44a848afbc917355a, type: 3}
+  m_Name: 02_sprinkler
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.FarmBuildableDefinition
+  Id: 02_sprinkler
+  DisplayName: Aspersor
+  Category: 1
+  Description: Rega automaticamente cultivos no evento das 06:00.
+  KitItem: {fileID: 11400000, guid: 3f3b14c34fb6b8149851af2937551b73, type: 2}
+  Prefab: {fileID: 1325500182165932, guid: 19978d2b0f1893f459265597b0df493a, type: 3}
+  Footprint: {x: 1.2, y: 0.9, z: 1.2}
+  PlacedScale: {x: 1, y: 1, z: 1}
+  GroundOffset: 0
+  Function: 1
+  EffectRadius: 5
+  RotationStep: 45

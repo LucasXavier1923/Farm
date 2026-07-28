@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var huds = UnityEngine.Object.FindObjectsByType<FarmPrototype.Farming.FarmHudController>(); var canvases = UnityEngine.Object.FindObjectsByType<UnityEngine.Canvas>(); var text = \"[FARM_UI_COUNTS] huds=\" + huds.Length + \" canvases=\" + canvases.Length; foreach (var hud in huds) text += \" | open=\" + hud.IsInventoryOpen + \" object=\" + hud.transform.name; foreach (var canvas in canvases) text += \" | canvas=\" + canvas.name + \" parent=\" + (canvas.transform.parent != null ? canvas.transform.parent.name : \"none\"); UnityEngine.Debug.Log(text);",
+  "className": "InspectUiDuplicates",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

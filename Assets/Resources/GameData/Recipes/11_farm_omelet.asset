@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f70fa19b7cace7478de183aa7fe5c0b, type: 3}
+  m_Name: 11_farm_omelet
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.CraftingRecipe
+  Id: 11_farm_omelet
+  DisplayName: Farm Omelet
+  Description: A warm egg-and-wildflower meal for a demanding shared day.
+  RequiresDiscovery: 1
+  Ingredients:
+  - Item: {fileID: 11400000, guid: 55e99069e27f11c44bdc30d6f80a8d8d, type: 2}
+    Quantity: 1
+  - Item: {fileID: 11400000, guid: d5c20d9fcdffd8f42a333f4ef326502e, type: 2}
+    Quantity: 1
+  OutputItem: {fileID: 11400000, guid: f1e3d5b746ec4c5aa1286d0ae3c4195f, type: 2}
+  OutputQuantity: 1
+  PreviewPrefab: {fileID: 0}
+  RequiredMastery: 1
+  RequiredMasteryLevel: 1

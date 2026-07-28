@@ -1,0 +1,10 @@
+{
+  "gameObjectRef": { "path": "Player" },
+  "componentRef": { "index": -1, "instanceID": "568105589213104230" },
+  "jsonPatch": {
+    "propBoneConfig": {
+      "assetPath": "Assets/Synty/Tools/SyntyPropBoneTool/Configs/POLYGONRig_01_PropBoneBindingConfig.asset"
+    },
+    "rebindOnAwake": true
+  }
+}

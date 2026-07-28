@@ -1,0 +1,4 @@
+{
+  "csharpCode":"var hud=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>();if(hud!=null)hud.SetJournalOpen(false);",
+  "className":"CloseJournal","methodName":"Run","parameters":[],"isMethodBody":true
+}

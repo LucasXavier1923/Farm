@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11c74bb7f9438a6499afe07b7c157e8a, type: 3}
+  m_Name: CarrotCrop
+  m_EditorClassIdentifier: Assembly-CSharp::FarmPrototype.Farming.CropDefinition
+  Id: carrot
+  DisplayName: Cenoura
+  SeedItem: {fileID: 11400000, guid: 4fdc7fee7f4b86a428664f49d1a87035, type: 2}
+  HarvestItem: {fileID: 11400000, guid: dca368ffd8d9f4f45adca67bf3da5869, type: 2}
+  SmallModel: {fileID: 1712200964176758, guid: a74d9e41a3e780f47b3278a49fe842da, type: 3}
+  MediumModel: {fileID: 1290591311347902, guid: d87f295218b7b4245906cd9610c542da, type: 3}
+  LargeModel: {fileID: 1879033853735152, guid: 6d30e14ec4d9bf240be449faa7956c55, type: 3}
+  GrowthSeconds: 7
+  HarvestYield: 3
+  PreferredSeason: 3
+  PreferredSeasonYieldBonus: 1
+  SeedPackAmount: 8
+  SeedPackPrice: 24

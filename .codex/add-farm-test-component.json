@@ -1,0 +1,4 @@
+{
+  "gameObjectRef": { "path": "Farm_Test_System" },
+  "componentNames": [ "FarmPrototype.Farming.FarmTestPlot" ]
+}

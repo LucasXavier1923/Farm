@@ -1,0 +1,56 @@
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+
+namespace FarmPrototype.Farming
+{
+    public sealed class FarmStorageSlotView : MonoBehaviour,
+        IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler
+    {
+        private FarmHudController hud;
+        private bool fromBackpack;
+        private string itemId;
+
+        public void Initialize(FarmHudController owner, bool sourceIsBackpack, string id)
+        {
+            hud = owner;
+            fromBackpack = sourceIsBackpack;
+            itemId = id;
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (hud == null || string.IsNullOrWhiteSpace(itemId)) return;
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                Transfer(1);
+                return;
+            }
+
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            if (Keyboard.current != null && Keyboard.current.shiftKey.isPressed)
+                hud.TransferHalf(itemId, fromBackpack);
+            else Transfer(int.MaxValue);
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (!string.IsNullOrWhiteSpace(itemId))
+                hud?.ShowItemTooltip(itemId, eventData.position, fromBackpack ? "MOCHILA" : "DEPÓSITO");
+        }
+
+        public void OnPointerMove(PointerEventData eventData)
+        {
+            if (!string.IsNullOrWhiteSpace(itemId))
+                hud?.MoveItemTooltip(eventData.position);
+        }
+
+        public void OnPointerExit(PointerEventData eventData) => hud?.HideItemTooltip();
+
+        private void Transfer(int amount)
+        {
+            if (fromBackpack) hud.TransferToStorage(itemId, amount);
+            else hud.TransferFromStorage(itemId, amount);
+        }
+    }
+}

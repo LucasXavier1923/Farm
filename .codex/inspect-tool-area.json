@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var tiles=UnityEngine.Object.FindObjectsByType<FarmPrototype.Farming.FarmTestTile>(); System.Array.Sort(tiles,(a,b)=>a.Index.CompareTo(b.Index)); UnityEngine.Debug.Log($\"[AREA_INSPECT] level={plot.GameState.HoeLevel} centerIndex={tiles[4].Index} center={plot.GetAffectedTiles(tiles[4],FarmPrototype.Farming.FarmTool.Hoe).Count} corner={plot.GetAffectedTiles(tiles[0],FarmPrototype.Farming.FarmTool.Hoe).Count}\");",
+  "className":"InspectToolArea",
+  "methodName":"Run",
+  "parameters":[],
+  "isMethodBody":true
+}

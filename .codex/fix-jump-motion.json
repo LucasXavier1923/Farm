@@ -1,0 +1,7 @@
+{
+  "csharpCode": "AnimationClip jumpClip = null; foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(\"Assets/Synty/AnimationBaseLocomotion/Animations/Polygon/Masculine/InAir/A_Jump_Idle_Masc.fbx\")) { var clip = asset as AnimationClip; if (clip != null && clip.name == \"A_Jump_Idle_Masc\") { jumpClip = clip; break; } } if (jumpClip == null) throw new System.Exception(\"Named jump clip was not found.\"); var controller = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(\"Assets/_Project/Animations/PlayerLocomotion.controller\"); foreach (var childState in controller.layers[0].stateMachine.states) { if (childState.state.name == \"Jump\") childState.state.motion = jumpClip; } EditorUtility.SetDirty(controller); AssetDatabase.SaveAssets(); Debug.Log(\"[FarmAnimation] Jump motion fixed: \" + jumpClip.name);",
+  "className": "FixJumpMotion",
+  "methodName": "Execute",
+  "parameters": [],
+  "isMethodBody": true
+}

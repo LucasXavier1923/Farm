@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var importer = AssetImporter.GetAtPath(\"Assets/Synty/AnimationBaseLocomotion/Animations/Polygon/Masculine/InAir/A_Jump_Idle_Masc.fbx\") as ModelImporter; foreach (var clip in importer.defaultClipAnimations) Debug.Log(\"[JumpImportClip] name=\" + clip.name + \" take=\" + clip.takeName + \" first=\" + clip.firstFrame + \" last=\" + clip.lastFrame);",
+  "className": "InspectJumpImport",
+  "methodName": "Execute",
+  "parameters": [],
+  "isMethodBody": true
+}

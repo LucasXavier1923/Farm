@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var tileType = System.AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => { try { return a.GetTypes(); } catch { return System.Array.Empty<System.Type>(); } }).FirstOrDefault(t => t.Name == \"FarmTestTile\"); if (tileType == null) throw new System.Exception(\"FarmTestTile não encontrado\"); var tile = UnityEngine.Object.FindFirstObjectByType(tileType) as UnityEngine.Component; if (tile == null) throw new System.Exception(\"Nenhum FarmTestTile ativo encontrado\"); var use = tileType.GetMethod(\"Use\", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public); if (use == null) throw new System.Exception(\"Método Use não encontrado\"); var toolType = use.GetParameters()[0].ParameterType; string[] tools = { \"Hoe\", \"Seeds\", \"WateringCan\" }; var results = new System.Collections.Generic.List<string>(); foreach (var tool in tools) { var value = System.Enum.Parse(toolType, tool); results.Add(tool + \"=\" + use.Invoke(tile, new object[] { value })); } UnityEngine.Debug.Log(\"[VALIDACAO_ABOBORA] \" + string.Join(\" | \", results));",
+  "className": "PumpkinCycleValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

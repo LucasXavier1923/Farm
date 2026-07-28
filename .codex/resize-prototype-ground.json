@@ -1,0 +1,7 @@
+{
+  "csharpCode": "using UnityEditor;\nusing UnityEngine;\n\npublic static class ResizePrototypeGround\n{\n    public static string Main()\n    {\n        var ground = GameObject.Find(\"Prototype_Test_Area/TestGround\");\n        if (ground == null) return \"Base do protótipo não encontrada.\";\n        ground.transform.localScale = new Vector3(0.35f, 1f, 0.35f);\n        EditorUtility.SetDirty(ground);\n        return \"Base do protótipo ajustada para 35% do tamanho original.\";\n    }\n}",
+  "className": "ResizePrototypeGround",
+  "methodName": "Main",
+  "parameters": [],
+  "isMethodBody": false
+}

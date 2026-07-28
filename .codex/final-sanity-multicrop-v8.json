@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var player = UnityEngine.GameObject.Find(\"Player\"); var controller = player != null ? player.GetComponent<UnityEngine.CharacterController>() : null; if (plot == null || plot.GameState == null || plot.ShopCropCount != 3 || FarmPrototype.Farming.FarmContentDatabase.Crops.Count != 3) throw new System.Exception(\"Sanidade multicultura falhou\"); if (controller == null || !controller.enabled) throw new System.Exception(\"CharacterController deveria estar ativo\"); if (plot.GameState.Money != 100 || plot.GameState.PumpkinSeeds != 12 || plot.GameState.DayNumber != 1) throw new System.Exception(\"Save limpo não foi restaurado\"); if (UnityEngine.Object.FindObjectsByType<FarmPrototype.Farming.FarmTestTile>().Length != 9) throw new System.Exception(\"Canteiros incompletos\"); UnityEngine.Debug.Log(\"[FINAL_SANITY_MULTICROP_V8_OK] save limpo | controller | 3 culturas | 9 canteiros\");",
+  "className": "FinalSanityMultiCropV8",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

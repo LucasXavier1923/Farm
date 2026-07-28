@@ -1,0 +1,166 @@
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    public enum FarmDayPhase { Night, Dawn, Morning, Afternoon, Dusk }
+
+    public sealed class FarmDayClock : MonoBehaviour
+    {
+        [SerializeField, Min(60f)] private float realSecondsPerGameDay = 600f;
+        [SerializeField, Min(0f)] private float simulationSpeed = 1f;
+        [SerializeField, Min(5f)] private float saveCheckpointRealSeconds = 30f;
+
+        private FarmTestPlot plot;
+        private FarmGameState state;
+        private Light sun;
+        private Quaternion originalSunRotation;
+        private Color originalSunColor;
+        private float originalSunIntensity;
+        private float originalAmbientIntensity;
+        private float checkpointElapsed;
+        private float weatherLightMultiplier = 1f;
+        private bool lightingCaptured;
+
+        public int DayNumber => state != null ? state.DayNumber : 1;
+        public float MinutesOfDay => state != null ? state.MinutesOfDay : 480f;
+        public float SimulationSpeed => simulationSpeed;
+        public float RealSecondsPerGameDay => realSecondsPerGameDay;
+        public FarmDayPhase Phase => ResolvePhase(MinutesOfDay);
+        public float CurrentLightFactor { get; private set; }
+        public float WeatherLightMultiplier => weatherLightMultiplier;
+        public string DisplayText => $"DIA {DayNumber}   {FormatTime(MinutesOfDay)}   {PhaseName(Phase)}";
+
+        public void Initialize(FarmTestPlot owner, FarmGameState gameState)
+        {
+            plot = owner;
+            state = gameState;
+            CaptureLighting();
+            ApplyLighting();
+        }
+
+        private void Update()
+        {
+            if (state == null) return;
+            if (!FarmHudController.IsModalOpen && simulationSpeed > 0f)
+            {
+                var gameMinutesPerSecond = 1440f / Mathf.Max(60f, realSecondsPerGameDay);
+                var dayChanged = state.AdvanceClock(gameMinutesPerSecond * simulationSpeed * Time.deltaTime);
+                checkpointElapsed += Time.unscaledDeltaTime;
+                if (dayChanged || checkpointElapsed >= saveCheckpointRealSeconds)
+                {
+                    checkpointElapsed = 0f;
+                    plot?.NotifyClockCheckpoint();
+                }
+            }
+            ApplyLighting();
+        }
+
+        public void SetClockForTesting(int day, float minute)
+        {
+            state?.SetClock(day, minute);
+            ApplyLighting();
+        }
+
+        public void AdvanceMinutes(float minutes)
+        {
+            if (state == null) return;
+            state.AdvanceClock(minutes);
+            ApplyLighting();
+            plot?.NotifyClockCheckpoint();
+        }
+
+        public void SetSimulationSpeed(float value) => simulationSpeed = Mathf.Max(0f, value);
+
+        public void SetWeatherLightMultiplier(float value)
+        {
+            weatherLightMultiplier = Mathf.Clamp(value, 0.5f, 1f);
+            ApplyLighting();
+        }
+
+        private void CaptureLighting()
+        {
+            sun = RenderSettings.sun;
+            if (sun == null)
+            {
+                var lights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+                foreach (var candidate in lights)
+                {
+                    if (candidate.type != LightType.Directional) continue;
+                    if (sun == null || candidate.intensity > sun.intensity) sun = candidate;
+                }
+            }
+
+            originalAmbientIntensity = RenderSettings.ambientIntensity;
+            if (sun != null)
+            {
+                originalSunRotation = sun.transform.rotation;
+                originalSunColor = sun.color;
+                originalSunIntensity = sun.intensity;
+            }
+            lightingCaptured = true;
+        }
+
+        private void ApplyLighting()
+        {
+            if (!lightingCaptured) return;
+            var minutes = MinutesOfDay;
+            CurrentLightFactor = EvaluateLightFactor(minutes);
+            var ambientWeatherFactor = Mathf.Lerp(0.78f, 1f, weatherLightMultiplier);
+            RenderSettings.ambientIntensity = Mathf.Lerp(originalAmbientIntensity * 0.42f, originalAmbientIntensity, CurrentLightFactor) * ambientWeatherFactor;
+
+            if (sun == null) return;
+            var yaw = originalSunRotation.eulerAngles.y;
+            sun.transform.rotation = Quaternion.Euler((minutes / 4f) - 90f, yaw, 0f);
+            sun.intensity = originalSunIntensity * Mathf.Lerp(0.20f, 1f, CurrentLightFactor) * weatherLightMultiplier;
+            var nightColor = new Color(0.38f, 0.48f, 0.78f);
+            sun.color = Color.Lerp(nightColor, originalSunColor, CurrentLightFactor);
+        }
+
+        private void OnDestroy()
+        {
+            if (!lightingCaptured) return;
+            RenderSettings.ambientIntensity = originalAmbientIntensity;
+            if (sun == null) return;
+            sun.transform.rotation = originalSunRotation;
+            sun.color = originalSunColor;
+            sun.intensity = originalSunIntensity;
+        }
+
+        public static FarmDayPhase ResolvePhase(float minute)
+        {
+            minute = Mathf.Repeat(minute, 1440f);
+            if (minute < 300f || minute >= 1260f) return FarmDayPhase.Night;
+            if (minute < 480f) return FarmDayPhase.Dawn;
+            if (minute < 720f) return FarmDayPhase.Morning;
+            if (minute < 1080f) return FarmDayPhase.Afternoon;
+            return FarmDayPhase.Dusk;
+        }
+
+        public static float EvaluateLightFactor(float minute)
+        {
+            minute = Mathf.Repeat(minute, 1440f);
+            if (minute < 300f) return 0.12f;
+            if (minute < 480f) return Mathf.SmoothStep(0.12f, 0.85f, (minute - 300f) / 180f);
+            if (minute < 720f) return Mathf.SmoothStep(0.85f, 1f, (minute - 480f) / 240f);
+            if (minute < 1080f) return 1f;
+            if (minute < 1260f) return Mathf.SmoothStep(1f, 0.12f, (minute - 1080f) / 180f);
+            return 0.12f;
+        }
+
+        public static string FormatTime(float minute)
+        {
+            var total = Mathf.FloorToInt(Mathf.Repeat(minute, 1440f));
+            return $"{total / 60:00}:{total % 60:00}";
+        }
+
+        private static string PhaseName(FarmDayPhase phase) => phase switch
+        {
+            FarmDayPhase.Night => "Noite",
+            FarmDayPhase.Dawn => "Amanhecer",
+            FarmDayPhase.Morning => "Manh\u00E3",
+            FarmDayPhase.Afternoon => "Tarde",
+            FarmDayPhase.Dusk => "Entardecer",
+            _ => string.Empty
+        };
+    }
+}

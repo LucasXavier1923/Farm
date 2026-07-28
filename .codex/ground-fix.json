@@ -1,0 +1,15 @@
+{
+  "csharpCode": "var model = player.transform.Find(\"SM_Chr_Farmer_Male_01\"); if (model == null) throw new System.Exception(\"Active farmer model was not found.\"); var renderers = player.GetComponentsInChildren<Renderer>(); var visualMin = float.PositiveInfinity; foreach (var renderer in renderers) if (renderer.gameObject.activeInHierarchy) visualMin = Mathf.Min(visualMin, renderer.bounds.min.y); var hits = Physics.RaycastAll(player.transform.position + Vector3.up * 1000f, Vector3.down, 2000f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore); RaycastHit groundHit = new RaycastHit(); var foundGround = false; foreach (var hit in hits) { if (!hit.collider.transform.IsChildOf(player.transform)) { groundHit = hit; foundGround = true; break; } } if (!foundGround) throw new System.Exception(\"Ground was not found below player.\"); var offset = visualMin - groundHit.point.y; model.position -= Vector3.up * offset; EditorUtility.SetDirty(model); UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(player.scene); Debug.Log(\"[GroundFix] Lowered visual model by \" + offset + \".\");",
+  "className": "GroundPlayerVisual",
+  "methodName": "Execute",
+  "parameters": [
+    {
+      "typeName": "UnityEngine.GameObject",
+      "name": "player",
+      "value": {
+        "path": "Player"
+      }
+    }
+  ],
+  "isMethodBody": true
+}

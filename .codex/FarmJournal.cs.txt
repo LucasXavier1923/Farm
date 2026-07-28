@@ -1,0 +1,129 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    public enum FarmJournalMetric
+    {
+        Tilled,
+        Planted,
+        Watered,
+        HarvestedUnits,
+        SoldUnits,
+        SeedPacksBought,
+        WorldPickups,
+        ToolUpgrades,
+        UniqueCrops
+    }
+
+    [Serializable]
+    public sealed class FarmJournalProgress
+    {
+        public int Tilled;
+        public int Planted;
+        public int Watered;
+        public int HarvestedUnits;
+        public int SoldUnits;
+        public int SeedPacksBought;
+        public int WorldPickups;
+        public int ToolUpgrades;
+        public List<string> HarvestedCropIds = new();
+        public List<string> ClaimedQuestIds = new();
+
+        public FarmJournalProgress Clone() => new()
+        {
+            Tilled = Tilled,
+            Planted = Planted,
+            Watered = Watered,
+            HarvestedUnits = HarvestedUnits,
+            SoldUnits = SoldUnits,
+            SeedPacksBought = SeedPacksBought,
+            WorldPickups = WorldPickups,
+            ToolUpgrades = ToolUpgrades,
+            HarvestedCropIds = new List<string>(HarvestedCropIds ?? new List<string>()),
+            ClaimedQuestIds = new List<string>(ClaimedQuestIds ?? new List<string>())
+        };
+
+        public bool HasClaimed(string questId)
+        {
+            if (string.IsNullOrWhiteSpace(questId) || ClaimedQuestIds == null) return false;
+            foreach (var id in ClaimedQuestIds)
+                if (string.Equals(id, questId, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        public void RecordCrop(string cropId)
+        {
+            if (string.IsNullOrWhiteSpace(cropId)) return;
+            HarvestedCropIds ??= new List<string>();
+            foreach (var id in HarvestedCropIds)
+                if (string.Equals(id, cropId, StringComparison.OrdinalIgnoreCase)) return;
+            HarvestedCropIds.Add(cropId);
+        }
+    }
+
+    public sealed class FarmJournalQuestDefinition
+    {
+        public string Id { get; }
+        public string Category { get; }
+        public string Title { get; }
+        public string Description { get; }
+        public FarmJournalMetric Metric { get; }
+        public int Target { get; }
+        public int RewardMoney { get; }
+
+        public FarmJournalQuestDefinition(string id, string category, string title, string description, FarmJournalMetric metric, int target, int rewardMoney)
+        {
+            Id = id;
+            Category = category;
+            Title = title;
+            Description = description;
+            Metric = metric;
+            Target = Mathf.Max(1, target);
+            RewardMoney = Mathf.Max(0, rewardMoney);
+        }
+
+        public int Current(FarmJournalProgress progress)
+        {
+            if (progress == null) return 0;
+            return Metric switch
+            {
+                FarmJournalMetric.Tilled => progress.Tilled,
+                FarmJournalMetric.Planted => progress.Planted,
+                FarmJournalMetric.Watered => progress.Watered,
+                FarmJournalMetric.HarvestedUnits => progress.HarvestedUnits,
+                FarmJournalMetric.SoldUnits => progress.SoldUnits,
+                FarmJournalMetric.SeedPacksBought => progress.SeedPacksBought,
+                FarmJournalMetric.WorldPickups => progress.WorldPickups,
+                FarmJournalMetric.ToolUpgrades => progress.ToolUpgrades,
+                FarmJournalMetric.UniqueCrops => progress.HarvestedCropIds?.Count ?? 0,
+                _ => 0
+            };
+        }
+
+        public bool IsComplete(FarmJournalProgress progress) => Current(progress) >= Target;
+    }
+
+    public static class FarmJournalDatabase
+    {
+        private static readonly FarmJournalQuestDefinition[] definitions =
+        {
+            new("cultivated_land", "INTRODU\u00C7\u00C3O", "Terra cultivada", "Prepare 10 canteiros com a enxada.", FarmJournalMetric.Tilled, 10, 50),
+            new("harvest_basket", "PRODU\u00C7\u00C3O", "Cesta cheia", "Colha 12 produtos de qualquer cultura.", FarmJournalMetric.HarvestedUnits, 12, 75),
+            new("crop_variety", "DESCOBERTA", "Tr\u00EAs sabores", "Colha ab\u00F3bora, cenoura e milho.", FarmJournalMetric.UniqueCrops, 3, 100),
+            new("better_tools", "PROGRESS\u00C3O", "Trabalho inteligente", "Compre 2 melhorias de ferramentas.", FarmJournalMetric.ToolUpgrades, 2, 125),
+            new("world_collector", "EXPLORA\u00C7\u00C3O", "Olhos atentos", "Colete os 3 itens espalhados pela fazenda.", FarmJournalMetric.WorldPickups, 3, 50)
+        };
+
+        public static IReadOnlyList<FarmJournalQuestDefinition> Definitions => definitions;
+
+        public static FarmJournalQuestDefinition Get(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return null;
+            foreach (var definition in definitions)
+                if (string.Equals(definition.Id, id, StringComparison.OrdinalIgnoreCase)) return definition;
+            return null;
+        }
+    }
+}

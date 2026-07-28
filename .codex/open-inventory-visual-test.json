@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); if (hud == null) throw new System.Exception(\"HUD ausente\"); hud.SetInventoryOpen(true);",
+  "className": "OpenInventoryVisualTest",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

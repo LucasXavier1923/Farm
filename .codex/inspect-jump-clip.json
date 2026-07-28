@@ -1,0 +1,7 @@
+{
+  "csharpCode": "foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(\"Assets/Synty/AnimationBaseLocomotion/Animations/Polygon/Masculine/InAir/A_Jump_Idle_Masc.fbx\")) Debug.Log(\"[JumpClipAsset] \" + asset.GetType().Name + \" :: \" + asset.name);",
+  "className": "InspectJumpClip",
+  "methodName": "Execute",
+  "parameters": [],
+  "isMethodBody": true
+}

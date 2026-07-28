@@ -1,0 +1,453 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+namespace FarmPrototype.Farming
+{
+    public enum FarmCollectionCategory
+    {
+        All,
+        Seeds,
+        Crops,
+        Materials,
+        Projects
+    }
+
+    public static class FarmCollectionDatabase
+    {
+        public static List<ItemDefinition> Get(FarmCollectionCategory category)
+        {
+            var result = new List<ItemDefinition>();
+            foreach (var definition in FarmContentDatabase.Items)
+            {
+                if (definition == null || string.IsNullOrWhiteSpace(definition.Id)) continue;
+                if (Matches(definition, category)) result.Add(definition);
+            }
+            result.Sort((left, right) =>
+            {
+                var categoryCompare = CollectionOrder(left).CompareTo(CollectionOrder(right));
+                if (categoryCompare != 0) return categoryCompare;
+                return string.Compare(left.LocalizedName, right.LocalizedName, StringComparison.CurrentCultureIgnoreCase);
+            });
+            return result;
+        }
+
+        public static bool IsProject(ItemDefinition definition) =>
+            definition != null &&
+            definition.Category == ItemCategory.Material &&
+            definition.Id.EndsWith("_kit", StringComparison.OrdinalIgnoreCase);
+
+        private static bool Matches(ItemDefinition definition, FarmCollectionCategory category) => category switch
+        {
+            FarmCollectionCategory.All => true,
+            FarmCollectionCategory.Seeds => definition.Category == ItemCategory.Seed,
+            FarmCollectionCategory.Crops => definition.Category == ItemCategory.Crop,
+            FarmCollectionCategory.Materials => definition.Category == ItemCategory.Material && !IsProject(definition),
+            FarmCollectionCategory.Projects => IsProject(definition),
+            _ => true
+        };
+
+        private static int CollectionOrder(ItemDefinition definition)
+        {
+            if (definition.Category == ItemCategory.Seed) return 0;
+            if (definition.Category == ItemCategory.Crop) return 1;
+            if (IsProject(definition)) return 3;
+            if (definition.Category == ItemCategory.Material) return 2;
+            return 4;
+        }
+    }
+
+    public sealed class FarmCollectionBook : MonoBehaviour
+    {
+        private const int CardsPerPage = 12;
+        private static readonly Color PanelColor = new(0.045f, 0.065f, 0.038f, 0.97f);
+        private static readonly Color CardColor = new(0.095f, 0.125f, 0.075f, 0.98f);
+        private static readonly Color HiddenColor = new(0.065f, 0.075f, 0.06f, 0.94f);
+        private static readonly Color AccentColor = new(0.96f, 0.70f, 0.20f, 1f);
+        private static readonly Color DiscoveryColor = new(0.48f, 0.90f, 0.42f, 1f);
+
+        private FarmGameState state;
+        private FarmHudController hud;
+        private Font font;
+        private CanvasGroup windowGroup;
+        private GameObject window;
+        private Text progressText;
+        private Text categoryText;
+        private Text pageText;
+        private readonly Image[] cardBackgrounds = new Image[CardsPerPage];
+        private readonly Text[] cardIcons = new Text[CardsPerPage];
+        private readonly Text[] cardTitles = new Text[CardsPerPage];
+        private readonly Text[] cardBodies = new Text[CardsPerPage];
+        private readonly Button[] categoryButtons = new Button[5];
+        private readonly Image[] categoryBackgrounds = new Image[5];
+        private FarmCollectionCategory selectedCategory;
+        private int currentPage;
+
+        public bool IsOpen { get; private set; }
+        public FarmCollectionCategory SelectedCategory => selectedCategory;
+        public int CurrentPage => currentPage;
+        public int TotalCount => FarmCollectionDatabase.Get(FarmCollectionCategory.All).Count;
+        public int DiscoveredCount
+        {
+            get
+            {
+                if (state == null) return 0;
+                var count = 0;
+                foreach (var definition in FarmCollectionDatabase.Get(FarmCollectionCategory.All))
+                    if (state.IsItemDiscovered(definition.Id)) count++;
+                return count;
+            }
+        }
+        public int VisibleCardCount
+        {
+            get
+            {
+                var count = 0;
+                foreach (var background in cardBackgrounds)
+                    if (background != null && background.gameObject.activeSelf) count++;
+                return count;
+            }
+        }
+        public string ProgressText => progressText != null ? progressText.text : string.Empty;
+        public string CategoryText => categoryText != null ? categoryText.text : string.Empty;
+
+        public void Initialize(FarmGameState gameState, FarmHudController owner)
+        {
+            state = gameState;
+            hud = owner;
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            CreateInterface();
+            if (state != null) state.Changed += RefreshIfOpen;
+            Refresh();
+        }
+
+        private void OnDestroy()
+        {
+            if (state != null) state.Changed -= RefreshIfOpen;
+            if (IsOpen) hud?.SetCollectionOpen(false);
+        }
+
+        private void Update()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+            if (keyboard.lKey.wasPressedThisFrame)
+            {
+                if (IsOpen) Close();
+                else Open();
+                return;
+            }
+            if (IsOpen && keyboard.escapeKey.wasPressedThisFrame) Close();
+            if (IsOpen && keyboard.cKey.wasPressedThisFrame) ClaimNextMilestone();
+        }
+
+        public bool Open()
+        {
+            if (IsOpen) return true;
+            if (FarmHudController.IsModalOpen) return false;
+            IsOpen = true;
+            hud?.SetCollectionOpen(true);
+            SetCanvasGroup(windowGroup, true);
+            window.transform.SetAsLastSibling();
+            Refresh();
+            return true;
+        }
+
+        public bool OpenForTesting() => Open();
+
+        public void Close()
+        {
+            if (!IsOpen) return;
+            IsOpen = false;
+            SetCanvasGroup(windowGroup, false);
+            hud?.SetCollectionOpen(false);
+        }
+
+        public void SetCategory(FarmCollectionCategory category)
+        {
+            selectedCategory = category;
+            currentPage = 0;
+            Refresh();
+        }
+
+        public void ChangePage(int direction)
+        {
+            var definitions = FarmCollectionDatabase.Get(selectedCategory);
+            var pageCount = Mathf.Max(1, Mathf.CeilToInt(definitions.Count / (float)CardsPerPage));
+            currentPage = Mathf.Clamp(currentPage + direction, 0, pageCount - 1);
+            Refresh();
+        }
+
+        private void RefreshIfOpen()
+        {
+            if (IsOpen) Refresh();
+        }
+
+        public void Refresh()
+        {
+            if (state == null || progressText == null) return;
+            var all = FarmCollectionDatabase.Get(FarmCollectionCategory.All);
+            var definitions = FarmCollectionDatabase.Get(selectedCategory);
+            var discovered = 0;
+            foreach (var definition in all)
+                if (state.IsItemDiscovered(definition.Id)) discovered++;
+            var percent = all.Count > 0 ? Mathf.RoundToInt(discovered * 100f / all.Count) : 100;
+            progressText.text = FarmLocalization.Format("collection.progress", "DISCOVERED  {0}/{1}  •  {2}%", discovered, all.Count, percent);
+            var milestoneIndex = NextMilestoneIndex();
+            if (milestoneIndex >= 0)
+            {
+                var milestone = FarmCollectionMilestoneCatalog.Get(milestoneIndex);
+                var reward = FarmContentDatabase.GetItem(milestone.RewardItemId)?.LocalizedName ?? milestone.RewardItemId;
+                progressText.text = FarmLocalization.Format("collection.progress_milestone", "DISCOVERED {0}/{1}  •  {2}%\nNEXT: {3} discoveries -> {4} x{5}. Press C to claim when ready.", discovered, all.Count, percent, milestone.Threshold, reward, milestone.RewardAmount);
+            }
+            else progressText.text = FarmLocalization.Format("collection.progress_complete", "DISCOVERED {0}/{1}  •  Collection rewards claimed.", discovered, all.Count);
+            categoryText.text = CategoryLabel(selectedCategory);
+
+            var pageCount = Mathf.Max(1, Mathf.CeilToInt(definitions.Count / (float)CardsPerPage));
+            currentPage = Mathf.Clamp(currentPage, 0, pageCount - 1);
+            pageText.text = FarmLocalization.Format("ui.page", "PAGE {0}/{1}", currentPage + 1, pageCount);
+            var first = currentPage * CardsPerPage;
+            for (var index = 0; index < CardsPerPage; index++)
+            {
+                var dataIndex = first + index;
+                var visible = dataIndex < definitions.Count;
+                cardBackgrounds[index].gameObject.SetActive(visible);
+                if (!visible) continue;
+                var definition = definitions[dataIndex];
+                var known = state.IsItemDiscovered(definition.Id);
+                cardBackgrounds[index].color = known ? CardColor : HiddenColor;
+                cardIcons[index].text = known ? IconLetter(definition) : "?";
+                cardIcons[index].color = known ? IconColor(definition) : new Color(0.38f, 0.42f, 0.36f);
+                cardTitles[index].text = known ? definition.LocalizedName : "????";
+                cardTitles[index].color = known ? Color.white : new Color(0.48f, 0.52f, 0.46f);
+                cardBodies[index].text = known
+                    ? BuildDetails(definition)
+                    : FarmLocalization.Get("collection.undiscovered", "Not discovered yet\nFind, harvest, or craft it.");
+                cardBodies[index].color = known ? new Color(0.76f, 0.84f, 0.70f) : new Color(0.42f, 0.46f, 0.40f);
+            }
+
+            for (var index = 0; index < categoryBackgrounds.Length; index++)
+                categoryBackgrounds[index].color = index == (int)selectedCategory
+                    ? new Color(0.34f, 0.48f, 0.18f, 1f)
+                    : new Color(0.18f, 0.24f, 0.13f, 1f);
+        }
+
+        private string BuildDetails(ItemDefinition definition)
+        {
+            var owned = state.GetQuantity(definition.Id) + state.GetStorageQuantity(definition.Id);
+            var type = FarmCollectionDatabase.IsProject(definition) ? FarmLocalization.Get("collection.type.project", "PROJECT") : definition.Category switch
+            {
+                ItemCategory.Seed => FarmLocalization.Get("collection.type.seed", "SEED"),
+                ItemCategory.Crop => FarmLocalization.Get("collection.type.crop", "CROP"),
+                ItemCategory.Material => FarmLocalization.Get("collection.type.material", "MATERIAL"),
+                ItemCategory.Tool => FarmLocalization.Get("collection.type.tool", "TOOL"),
+                ItemCategory.Fertilizer => FarmLocalization.Get("collection.type.fertilizer", "FERTILIZER"),
+                _ => FarmLocalization.Get("collection.type.item", "ITEM")
+            };
+            var baseValue = FarmEconomyRules.BaseSellPrice(definition);
+            var detail = baseValue > 0
+                ? FarmLocalization.Format("collection.value.base", "Base value: ${0}", baseValue)
+                : FarmCollectionDatabase.IsProject(definition)
+                    ? FarmLocalization.Get("collection.value.build", "Used for building")
+                    : FarmLocalization.Get("collection.value.none", "Not sold directly");
+            return FarmLocalization.Format("collection.card.details", "{0}\nOwned: {1}  •  Stack: {2}\n{3}", type, owned, definition.MaxStack, detail);
+        }
+
+        private int NextMilestoneIndex()
+        {
+            if (state == null) return -1;
+            for (var index = 0; index < FarmCollectionMilestoneCatalog.Count; index++)
+                if ((state.CollectionMilestoneMask & (1 << index)) == 0) return index;
+            return -1;
+        }
+
+        private void ClaimNextMilestone()
+        {
+            if (state == null) return;
+            if (!FarmSessionTime.IsSimulationAuthority)
+            {
+                FarmSessionIntentBus.Raise(FarmSessionIntentKind.CollectionMilestone, "Player", "action=claim");
+                hud?.ShowSystemToast(FarmLocalization.Get("backend.peer.awaiting_host", "Waiting for host confirmation."));
+                return;
+            }
+
+            if (state.TryClaimNextCollectionMilestone(out var milestone, out var error))
+            {
+                var reward = FarmContentDatabase.GetItem(milestone.RewardItemId)?.LocalizedName ?? milestone.RewardItemId;
+                hud?.ShowSystemToast(FarmLocalization.Format("collection.milestone.claimed", "Collection reward claimed: {0} x{1}.", reward, milestone.RewardAmount));
+            }
+            else hud?.ShowSystemToast(error, true);
+            Refresh();
+        }
+
+        private void CreateInterface()
+        {
+            var root = new GameObject("Farm_Collection_UI");
+            root.transform.SetParent(transform, false);
+            var canvas = root.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 125;
+            var scaler = root.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            root.AddComponent<GraphicRaycaster>();
+
+            var openButton = CreateButton("OpenCollection", root.transform, "collection.launch", new Vector2(-18f, -493f), new Vector2(210f, 48f));
+            var openRect = openButton.GetComponent<RectTransform>();
+            openRect.anchorMin = Vector2.one;
+            openRect.anchorMax = Vector2.one;
+            openRect.pivot = Vector2.one;
+            openButton.onClick.AddListener(() =>
+            {
+                if (IsOpen) Close();
+                else Open();
+            });
+
+            window = CreatePanel("CollectionWindow", root.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Vector2.zero, new Color(0.01f, 0.018f, 0.008f, 0.80f));
+            var overlay = window.GetComponent<RectTransform>();
+            overlay.offsetMin = Vector2.zero;
+            overlay.offsetMax = Vector2.zero;
+            windowGroup = window.AddComponent<CanvasGroup>();
+            var panel = CreatePanel("CollectionPanel", window.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1240f, 790f), new Vector2(0.5f, 0.5f), PanelColor);
+
+            CreateText("Title", panel.transform, "collection.title", 31, FontStyle.Bold, AccentColor, new Vector2(30f, -22f), new Vector2(570f, 42f));
+            progressText = CreateText("Progress", panel.transform, "", 17, FontStyle.Bold, DiscoveryColor, new Vector2(30f, -62f), new Vector2(840f, 46f));
+            CreateText("Subtitle", panel.transform, "collection.subtitle", 14, FontStyle.Normal, new Color(0.72f, 0.78f, 0.68f), new Vector2(30f, -112f), new Vector2(650f, 24f));
+            var close = CreateButton("CloseCollection", panel.transform, "ui.close.esc", new Vector2(1030f, -24f), new Vector2(180f, 46f));
+            close.onClick.AddListener(Close);
+
+            var categories = new[] { "collection.filter.all", "collection.filter.seeds", "collection.filter.crops", "collection.filter.materials", "collection.filter.projects" };
+            for (var index = 0; index < categories.Length; index++)
+            {
+                var captured = (FarmCollectionCategory)index;
+                categoryButtons[index] = CreateButton($"Category_{categories[index]}", panel.transform, categories[index], new Vector2(30f + index * 222f, -146f), new Vector2(205f, 44f));
+                categoryBackgrounds[index] = categoryButtons[index].GetComponent<Image>();
+                categoryButtons[index].onClick.AddListener(() => SetCategory(captured));
+            }
+            categoryText = CreateText("CategoryTitle", panel.transform, "", 19, FontStyle.Bold, Color.white, new Vector2(32f, -203f), new Vector2(450f, 30f));
+
+            for (var index = 0; index < CardsPerPage; index++)
+            {
+                var column = index % 4;
+                var row = index / 4;
+                var card = CreatePanel($"CollectionCard_{index + 1}", panel.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(30f + column * 300f, -243f - row * 155f), new Vector2(282f, 137f), new Vector2(0f, 1f), CardColor);
+                cardBackgrounds[index] = card.GetComponent<Image>();
+                cardIcons[index] = CreateText("Icon", card.transform, "", 34, FontStyle.Bold, Color.white, new Vector2(14f, -16f), new Vector2(48f, 48f), TextAnchor.MiddleCenter);
+                cardTitles[index] = CreateText("Title", card.transform, "", 16, FontStyle.Bold, Color.white, new Vector2(68f, -15f), new Vector2(198f, 38f));
+                cardBodies[index] = CreateText("Details", card.transform, "", 13, FontStyle.Normal, new Color(0.76f, 0.84f, 0.70f), new Vector2(16f, -66f), new Vector2(250f, 60f));
+            }
+
+            var previous = CreateButton("PreviousPage", panel.transform, "<", new Vector2(480f, -720f), new Vector2(64f, 44f));
+            pageText = CreateText("Page", panel.transform, "", 15, FontStyle.Bold, Color.white, new Vector2(555f, -720f), new Vector2(130f, 44f), TextAnchor.MiddleCenter);
+            var next = CreateButton("NextPage", panel.transform, ">", new Vector2(696f, -720f), new Vector2(64f, 44f));
+            previous.onClick.AddListener(() => ChangePage(-1));
+            next.onClick.AddListener(() => ChangePage(1));
+            SetCanvasGroup(windowGroup, false);
+        }
+
+        private static string CategoryLabel(FarmCollectionCategory category) => category switch
+        {
+            FarmCollectionCategory.Seeds => FarmLocalization.Get("collection.filter.seeds", "SEEDS"),
+            FarmCollectionCategory.Crops => FarmLocalization.Get("collection.filter.crops", "CROPS"),
+            FarmCollectionCategory.Materials => FarmLocalization.Get("collection.filter.materials", "MATERIALS"),
+            FarmCollectionCategory.Projects => FarmLocalization.Get("collection.filter.projects", "PROJECTS"),
+            _ => FarmLocalization.Get("collection.filter.all_items", "ALL ITEMS")
+        };
+
+        private static string IconLetter(ItemDefinition definition)
+        {
+            if (definition == null) return "?";
+            if (FarmCollectionDatabase.IsProject(definition)) return "B";
+            return definition.Category switch
+            {
+                ItemCategory.Seed => "S",
+                ItemCategory.Crop => "P",
+                ItemCategory.Tool => "F",
+                ItemCategory.Material => "M",
+                ItemCategory.Fertilizer => "C",
+                _ => "?"
+            };
+        }
+
+        private static Color IconColor(ItemDefinition definition)
+        {
+            if (definition == null) return Color.white;
+            if (FarmCollectionDatabase.IsProject(definition)) return new Color(0.48f, 0.80f, 0.96f);
+            return definition.Category switch
+            {
+                ItemCategory.Seed => new Color(0.95f, 0.76f, 0.25f),
+                ItemCategory.Crop => new Color(0.96f, 0.48f, 0.18f),
+                ItemCategory.Tool => new Color(0.48f, 0.72f, 0.92f),
+                ItemCategory.Material => new Color(0.70f, 0.62f, 0.48f),
+                ItemCategory.Fertilizer => new Color(0.42f, 0.74f, 0.27f),
+                _ => Color.white
+            };
+        }
+
+        private static void SetCanvasGroup(CanvasGroup group, bool visible)
+        {
+            if (group == null) return;
+            group.alpha = visible ? 1f : 0f;
+            group.interactable = visible;
+            group.blocksRaycasts = visible;
+        }
+
+        private static GameObject CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2 pivot, Color color)
+        {
+            var panel = new GameObject(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            panel.GetComponent<Image>().color = color;
+            return panel;
+        }
+
+        private Text CreateText(string name, Transform parent, string value, int size, FontStyle style, Color color, Vector2 position, Vector2 dimensions, TextAnchor alignment = TextAnchor.UpperLeft)
+        {
+            var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            var text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.text = FarmLocalization.Get(value, value);
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = alignment;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            var rect = text.rectTransform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = dimensions;
+            return text;
+        }
+
+        private Button CreateButton(string name, Transform parent, string label, Vector2 position, Vector2 size)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            var rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            buttonObject.GetComponent<Image>().color = new Color(0.24f, 0.34f, 0.14f, 1f);
+            var button = buttonObject.GetComponent<Button>();
+            var labelText = CreateText("Label", buttonObject.transform, label, 14, FontStyle.Bold, Color.white, Vector2.zero, size, TextAnchor.MiddleCenter);
+            labelText.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            labelText.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            labelText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            return button;
+        }
+    }
+}

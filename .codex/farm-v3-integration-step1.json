@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; var game = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmGameState>(); var tiles = UnityEngine.Object.FindObjectsByType<FarmPrototype.Farming.FarmTestTile>(); var station = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmSellStation>(); if (game == null || tiles.Length != 9 || station == null) throw new System.Exception(\"Bootstrap incompleto\"); game.Restore(new FarmPrototype.Farming.FarmSaveData { Money = 100, PumpkinSeeds = 12, Pumpkins = 0 }); for (int i = 0; i < tiles.Length; i++) tiles[i].Restore(new FarmPrototype.Farming.FarmTileSaveData { Index = i, State = 0, CropId = \"pumpkin\", GrowthSecondsRemaining = 0f }); var target = tiles[0]; var hoe = target.Use(FarmPrototype.Farming.FarmTool.Hoe, game, null); var seed = target.Use(FarmPrototype.Farming.FarmTool.Seeds, game, FarmPrototype.Farming.FarmGameState.PumpkinSeedId); var water = target.Use(FarmPrototype.Farming.FarmTool.WateringCan, game, null); if (game.PumpkinSeeds != 11) throw new System.Exception(\"Semente nao consumida\"); UnityEngine.Debug.Log(\"[FARM_V3_TEST_1_OK] \" + hoe + \" | \" + seed + \" | \" + water);",
+  "className": "FarmV3IntegrationStep1",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

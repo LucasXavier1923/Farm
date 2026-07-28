@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); UnityEngine.Transform window = null; foreach (var item in hud.GetComponentsInChildren<UnityEngine.Transform>(true)) if (item.name == \"InventoryWindow\") window = item; if (window == null) throw new System.Exception(\"InventoryWindow ausente\"); window.gameObject.SetActive(true); foreach (var graphic in window.GetComponentsInChildren<UnityEngine.UI.Graphic>(true)) { graphic.enabled = false; graphic.enabled = true; graphic.SetAllDirty(); } UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate((UnityEngine.RectTransform)window); UnityEngine.Canvas.ForceUpdateCanvases();",
+  "className": "ForceInventoryGraphicsTest",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

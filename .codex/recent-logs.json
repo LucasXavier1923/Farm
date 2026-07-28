@@ -1,0 +1,6 @@
+{
+  "maxEntries": 10,
+  "logTypeFilter": "Log",
+  "includeStackTrace": false,
+  "lastMinutes": 5
+}

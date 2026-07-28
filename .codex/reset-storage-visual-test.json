@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); if (hud != null) hud.SetStorageOpen(false); if (plot != null && plot.GameState != null) plot.GameState.Restore(new FarmPrototype.Farming.FarmSaveData { Version = 5, Money = 100, PumpkinSeeds = 12, Pumpkins = 0, Tutorial = new FarmPrototype.Farming.FarmTutorialProgress(), Storage = new System.Collections.Generic.List<FarmPrototype.Farming.InventoryStack>() });",
+  "className": "FarmStorageVisualReset",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

@@ -1,0 +1,4 @@
+{
+  "sourcePaths": ["Assets/PolygonFarm/Prefabs/Props/SM_Prop_Bed_01.prefab"],
+  "destinationPaths": ["Assets/Resources/FarmProps/SleepBed.prefab"]
+}

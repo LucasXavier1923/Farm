@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); if (plot.GameState.IsPickupCollected(\"modal_pause_test\")) throw new System.Exception(\"Pickup coletou com modal aberto\"); if (!hud.IsInventoryOpen || !FarmPrototype.Farming.FarmHudController.IsModalOpen) throw new System.Exception(\"Modal nao permaneceu aberto\"); hud.SetInventoryOpen(false); UnityEngine.Debug.Log(\"[PICKUP_MODAL_PAUSE_OK] bloqueado durante inventario\");",
+  "className": "FarmPickupV6ModalStep2",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

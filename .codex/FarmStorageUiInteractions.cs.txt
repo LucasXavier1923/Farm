@@ -1,0 +1,27 @@
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+namespace FarmPrototype.Farming
+{
+    public sealed class FarmStorageSlotView : MonoBehaviour, IPointerClickHandler
+    {
+        private FarmHudController hud;
+        private bool fromBackpack;
+        private string itemId;
+
+        public void Initialize(FarmHudController owner, bool sourceIsBackpack, string id)
+        {
+            hud = owner;
+            fromBackpack = sourceIsBackpack;
+            itemId = id;
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (hud == null || string.IsNullOrWhiteSpace(itemId)) return;
+            var amount = eventData.button == PointerEventData.InputButton.Right ? 1 : int.MaxValue;
+            if (fromBackpack) hud.TransferToStorage(itemId, amount);
+            else hud.TransferFromStorage(itemId, amount);
+        }
+    }
+}

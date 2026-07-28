@@ -1,0 +1,189 @@
+using System.Text;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
+
+namespace FarmPrototype.Farming
+{
+    public sealed class FarmHudController : MonoBehaviour
+    {
+        private static readonly Color PanelColor = new(0.06f, 0.08f, 0.055f, 0.90f);
+        private static readonly Color AccentColor = new(0.95f, 0.67f, 0.18f, 1f);
+        private static readonly Color SlotColor = new(0.12f, 0.15f, 0.10f, 0.94f);
+        private static readonly Color SelectedSlotColor = new(0.35f, 0.23f, 0.06f, 0.98f);
+
+        private FarmTestPlot plot;
+        private Font font;
+        private Text resourcesText;
+        private Text toolText;
+        private Text promptText;
+        private Text feedbackText;
+        private Text saveText;
+        private Text inventoryText;
+        private Text shopInfoText;
+        private GameObject shopPanel;
+        private Button sellButton;
+        private Button buyButton;
+        private readonly Image[] hotbarSlots = new Image[4];
+
+        public void Initialize(FarmTestPlot owner)
+        {
+            plot = owner;
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            CreateInterface();
+        }
+
+        private void Update()
+        {
+            if (plot == null || plot.GameState == null || resourcesText == null) return;
+            var state = plot.GameState;
+            var crop = plot.ActiveCrop;
+            resourcesText.text = $"${state.Money}    Sementes: {state.GetQuantity(crop.SeedItem.Id)}    {crop.DisplayName}: {state.GetQuantity(crop.HarvestItem.Id)}";
+            toolText.text = $"Ferramenta: {plot.ActiveToolDisplayName}";
+            promptText.text = plot.CurrentPrompt;
+            feedbackText.text = plot.Feedback;
+            saveText.text = $"F5 salvar  \u2022  F9 carregar    {plot.SaveStatus}";
+            inventoryText.text = BuildInventoryText(state);
+
+            for (var i = 0; i < hotbarSlots.Length; i++)
+                hotbarSlots[i].color = i == (int)plot.ActiveTool ? SelectedSlotColor : SlotColor;
+
+            shopPanel.SetActive(plot.ShopVisible);
+            if (plot.ShopVisible)
+            {
+                shopInfoText.text = plot.ShopInRange
+                    ? $"{crop.SeedPackAmount} sementes: ${crop.SeedPackPrice}\nVenda: ${crop.HarvestItem.BaseSellPrice} por {crop.DisplayName.ToLowerInvariant()}"
+                    : "Aproxime-se para negociar";
+                sellButton.interactable = plot.ShopInRange;
+                buyButton.interactable = plot.ShopInRange;
+            }
+        }
+
+        private string BuildInventoryText(FarmGameState state)
+        {
+            var builder = new StringBuilder("INVENT\u00C1RIO\n");
+            if (state.Inventory.Count == 0) return builder.Append("Vazio").ToString();
+            foreach (var stack in state.Inventory)
+            {
+                var definition = FarmContentDatabase.GetItem(stack.ItemId);
+                var name = definition != null ? definition.DisplayName : stack.ItemId;
+                builder.Append("\u2022 ").Append(name).Append("  x").Append(stack.Quantity).Append('\n');
+            }
+            builder.Append("\nSlots: ").Append(state.UsedSlots).Append('/').Append(state.SlotCapacity);
+            return builder.ToString();
+        }
+
+        private void CreateInterface()
+        {
+            EnsureEventSystem();
+            var root = new GameObject("Farm_UI");
+            root.transform.SetParent(transform, false);
+            var canvas = root.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            var scaler = root.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            root.AddComponent<GraphicRaycaster>();
+
+            var statusPanel = CreatePanel("Status", root.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -18f), new Vector2(590f, 194f), new Vector2(0f, 1f));
+            CreateText("Title", statusPanel.transform, "FAZENDA", 24, FontStyle.Bold, AccentColor, new Vector2(18f, -12f), new Vector2(550f, 30f));
+            resourcesText = CreateText("Resources", statusPanel.transform, "", 21, FontStyle.Bold, Color.white, new Vector2(18f, -48f), new Vector2(550f, 28f));
+            toolText = CreateText("Tool", statusPanel.transform, "", 18, FontStyle.Normal, Color.white, new Vector2(18f, -78f), new Vector2(550f, 25f));
+            promptText = CreateText("Prompt", statusPanel.transform, "", 17, FontStyle.Normal, new Color(0.85f, 0.92f, 0.75f), new Vector2(18f, -108f), new Vector2(550f, 25f));
+            feedbackText = CreateText("Feedback", statusPanel.transform, "", 17, FontStyle.Bold, AccentColor, new Vector2(18f, -137f), new Vector2(550f, 25f));
+            saveText = CreateText("Save", statusPanel.transform, "", 14, FontStyle.Normal, new Color(0.7f, 0.74f, 0.68f), new Vector2(18f, -166f), new Vector2(550f, 22f));
+
+            var inventoryPanel = CreatePanel("Inventory", root.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -18f), new Vector2(315f, 245f), new Vector2(1f, 1f));
+            inventoryText = CreateText("InventoryText", inventoryPanel.transform, "", 18, FontStyle.Normal, Color.white, new Vector2(18f, -16f), new Vector2(280f, 215f));
+
+            var hotbar = CreatePanel("Hotbar", root.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), new Vector2(620f, 92f), new Vector2(0.5f, 0f));
+            var labels = new[] { "1\nENXADA", "2\nSEMENTES", "3\nREGADOR", "4\nCOLHER" };
+            for (var i = 0; i < labels.Length; i++)
+            {
+                var slot = CreatePanel($"Slot_{i + 1}", hotbar.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(12f + (i * 151f), 0f), new Vector2(143f, 72f), new Vector2(0f, 0.5f));
+                hotbarSlots[i] = slot.GetComponent<Image>();
+                hotbarSlots[i].color = SlotColor;
+                var label = CreateText("Label", slot.transform, labels[i], 17, FontStyle.Bold, Color.white, Vector2.zero, new Vector2(135f, 62f), TextAnchor.MiddleCenter);
+                label.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                label.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                label.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            }
+
+            shopPanel = CreatePanel("Shop", root.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(430f, 205f), new Vector2(0.5f, 0.5f));
+            CreateText("ShopTitle", shopPanel.transform, "CAIXOTE DE COM\u00C9RCIO", 23, FontStyle.Bold, AccentColor, new Vector2(20f, -16f), new Vector2(390f, 30f), TextAnchor.MiddleCenter);
+            shopInfoText = CreateText("ShopInfo", shopPanel.transform, "", 17, FontStyle.Normal, Color.white, new Vector2(20f, -55f), new Vector2(390f, 55f), TextAnchor.MiddleCenter);
+            sellButton = CreateButton("Sell", shopPanel.transform, "VENDER TUDO", new Vector2(20f, -128f), new Vector2(185f, 52f));
+            buyButton = CreateButton("Buy", shopPanel.transform, "COMPRAR SEMENTES", new Vector2(225f, -128f), new Vector2(185f, 52f));
+            sellButton.onClick.AddListener(plot.RequestSell);
+            buyButton.onClick.AddListener(plot.RequestBuySeeds);
+            shopPanel.SetActive(false);
+        }
+
+        private void EnsureEventSystem()
+        {
+            if (EventSystem.current != null) return;
+            var eventObject = new GameObject("Farm_EventSystem");
+            eventObject.transform.SetParent(transform, false);
+            eventObject.AddComponent<EventSystem>();
+            eventObject.AddComponent<InputSystemUIInputModule>();
+        }
+
+        private GameObject CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2 pivot)
+        {
+            var panel = new GameObject(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            panel.GetComponent<Image>().color = PanelColor;
+            return panel;
+        }
+
+        private Text CreateText(string name, Transform parent, string value, int size, FontStyle style, Color color, Vector2 position, Vector2 dimensions, TextAnchor alignment = TextAnchor.UpperLeft)
+        {
+            var textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            var text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.text = value;
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.alignment = alignment;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            var rect = text.rectTransform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = dimensions;
+            return text;
+        }
+
+        private Button CreateButton(string name, Transform parent, string label, Vector2 position, Vector2 size)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            var rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            buttonObject.GetComponent<Image>().color = new Color(0.28f, 0.38f, 0.16f, 1f);
+            var button = buttonObject.GetComponent<Button>();
+            var labelText = CreateText("Label", buttonObject.transform, label, 16, FontStyle.Bold, Color.white, Vector2.zero, size, TextAnchor.MiddleCenter);
+            labelText.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            labelText.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            labelText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            return button;
+        }
+    }
+}

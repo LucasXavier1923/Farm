@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); if (plot == null || plot.WeatherSystem == null) throw new System.Exception(\"Clima ausente\"); var seed = plot.GameState.WorldSeed; var rainDay = 1; while (rainDay < 100 && FarmPrototype.Farming.FarmWeatherSystem.WeatherForDay(seed, rainDay) != FarmPrototype.Farming.FarmWeather.Rain) rainDay++; plot.GameState.SetClock(rainDay, 720f); plot.DayClock.SetSimulationSpeed(0f); plot.WeatherSystem.Refresh();",
+  "className": "FarmRainVisual",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; UnityEngine.Debug.Log(\"[VALIDACAO] Execução em segundo plano habilitada temporariamente.\");",
+  "className": "BackgroundTestEnable",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

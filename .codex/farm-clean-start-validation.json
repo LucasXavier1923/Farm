@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var game = UnityEngine.Object.FindFirstObjectByType<FarmPrototype.Farming.FarmGameState>(); var tiles = UnityEngine.Object.FindObjectsByType<FarmPrototype.Farming.FarmTestTile>(UnityEngine.FindObjectsSortMode.None); var station = UnityEngine.Object.FindFirstObjectByType<FarmPrototype.Farming.FarmSellStation>(); if (game == null || tiles.Length != 9 || station == null) throw new System.Exception(\"Falha no carregamento após reinício\"); if (game.Money != 100 || game.PumpkinSeeds != 12 || game.Pumpkins != 0) throw new System.Exception(\"Save limpo não foi restaurado: $\" + game.Money + \" sementes=\" + game.PumpkinSeeds + \" abóboras=\" + game.Pumpkins); UnityEngine.Debug.Log(\"[FARM_CLEAN_START_OK] 9 canteiros | caixote OK | $100 | 12 sementes | 0 abóboras\");",
+  "className": "FarmCleanStartValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

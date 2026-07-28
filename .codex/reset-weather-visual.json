@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); if (plot != null) { plot.GameState.SetClock(1, 480f); plot.DayClock.SetSimulationSpeed(1f); plot.WeatherSystem.Refresh(); }",
+  "className": "FarmWeatherVisualReset",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

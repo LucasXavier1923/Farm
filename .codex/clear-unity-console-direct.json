@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var logEntriesType = typeof(UnityEditor.Editor).Assembly.GetType(\"UnityEditor.LogEntries\"); if (logEntriesType == null) throw new System.Exception(\"UnityEditor.LogEntries ausente\"); var clearMethod = logEntriesType.GetMethod(\"Clear\", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic); if (clearMethod == null) throw new System.Exception(\"LogEntries.Clear ausente\"); clearMethod.Invoke(null, null);",
+  "className": "ClearUnityConsoleDirect",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

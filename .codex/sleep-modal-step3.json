@@ -1,0 +1,1 @@
+{"csharpCode":"var plot=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>();if(plot.GameState.MinutesOfDay<=900.1f)throw new System.Exception(\"Relogio nao retomou apos cancelar\");UnityEngine.Debug.Log(\"[SLEEP_MODAL_OK] pausa e retomada\");","className":"SleepModalStep3","methodName":"Run","parameters":[],"isMethodBody":true}

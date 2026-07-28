@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); var clock = plot.DayClock; if (clock.MinutesOfDay <= 602f) throw new System.Exception(\"Relogio nao avancou por deltaTime\"); var marker = new UnityEngine.GameObject(\"DayClock_Modal_Marker\"); marker.transform.position = new UnityEngine.Vector3(clock.MinutesOfDay, 0f, 0f); hud.SetInventoryOpen(true); UnityEngine.Debug.Log(\"[DAY_CLOCK_V7_ADVANCE_OK] minutos=\" + clock.MinutesOfDay);",
+  "className": "FarmDayClockV7Step2",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

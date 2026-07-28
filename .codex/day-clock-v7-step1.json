@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>(); if (plot == null || hud == null || plot.GameState == null || plot.DayClock == null) throw new System.Exception(\"Relogio v7 ausente\"); var clock = plot.DayClock; plot.GameState.SetClock(1, 600f); clock.SetSimulationSpeed(1f); var clockPanel = hud.transform.Find(\"Farm_UI/FarmClock\"); if (clockPanel == null) throw new System.Exception(\"Painel do relogio ausente\"); if (FarmPrototype.Farming.FarmDayClock.FormatTime(600f) != \"10:00\" || FarmPrototype.Farming.FarmDayClock.ResolvePhase(600f) != FarmPrototype.Farming.FarmDayPhase.Morning) throw new System.Exception(\"Formatacao ou fase incorreta\"); UnityEngine.Debug.Log(\"[DAY_CLOCK_V7_TEST_1_READY] dia1 10:00\");",
+  "className": "FarmDayClockV7Step1",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

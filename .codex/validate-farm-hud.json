@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var plot = UnityEngine.Object.FindFirstObjectByType<FarmPrototype.Farming.FarmTestPlot>(); var hud = UnityEngine.Object.FindFirstObjectByType<FarmPrototype.Farming.FarmHudController>(); var canvas = UnityEngine.GameObject.Find(\"Farm_UI\"); var eventSystem = UnityEngine.EventSystems.EventSystem.current; if (plot == null || hud == null || canvas == null || eventSystem == null) throw new System.Exception(\"HUD incompleto\"); string[] required = { \"Status\", \"Inventory\", \"Hotbar\", \"Shop\" }; foreach (var name in required) { var found = canvas.transform.Find(name); if (found == null) throw new System.Exception(\"Painel ausente: \" + name); } if (plot.ActiveCrop == null || plot.GameState == null || plot.GameState.Inventory.Count == 0) throw new System.Exception(\"Dados do HUD indisponíveis\"); UnityEngine.Debug.Log(\"[FARM_HUD_OK] Canvas + inventário + hotbar + comércio + EventSystem\");",
+  "className": "FarmHudValidation",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

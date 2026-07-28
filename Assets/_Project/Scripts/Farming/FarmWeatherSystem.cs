@@ -1,0 +1,167 @@
+using UnityEngine;
+
+namespace FarmPrototype.Farming
+{
+    public enum FarmWeather { Clear, Cloudy, Rain }
+
+    public sealed class FarmWeatherSystem : MonoBehaviour
+    {
+        [SerializeField, Min(0.2f)] private float rainWateringInterval = 1f;
+        [SerializeField, Min(0.1f)] private float transitionSpeed = 0.45f;
+
+        private FarmTestPlot plot;
+        private FarmGameState state;
+        private FarmDayClock clock;
+        private Transform player;
+        private ParticleSystem rainParticles;
+        private Material rainMaterial;
+        private int lastDay = -1;
+        private float rainBlend;
+        private float nextRainWateringAt;
+
+        public FarmWeather CurrentWeather { get; private set; }
+        public FarmWeather TomorrowWeather => state != null ? WeatherForDay(state.WorldSeed, state.DayNumber + 1) : FarmWeather.Clear;
+        public float RainBlend => rainBlend;
+        public bool IsRainEffectPlaying => rainParticles != null && rainParticles.isPlaying;
+        public string DisplayText => FarmLocalization.Format("weather.display", "{0}   \u2022   Tomorrow: {1}", WeatherName(CurrentWeather), WeatherName(TomorrowWeather));
+
+        public void Initialize(FarmTestPlot owner, FarmGameState gameState, FarmDayClock dayClock, Transform playerTransform)
+        {
+            plot = owner;
+            state = gameState;
+            clock = dayClock;
+            player = playerTransform;
+            CreateRainEffect();
+            RefreshWeather(true);
+        }
+
+        private void Update()
+        {
+            if (state == null || clock == null) return;
+            if (lastDay != state.DayNumber) RefreshWeather(true);
+            UpdateWeatherTransition();
+            if (rainParticles != null && player != null)
+                rainParticles.transform.position = player.position + (Vector3.up * 12f);
+
+            if (FarmSessionTime.IsSimulationAuthority && CurrentWeather == FarmWeather.Rain && FarmSessionTime.Now >= nextRainWateringAt)
+            {
+                nextRainWateringAt = FarmSessionTime.Now + rainWateringInterval;
+                plot?.ApplyRainToTiles();
+            }
+        }
+
+        public void Refresh()
+        {
+            lastDay = -1;
+            RefreshWeather(true);
+            UpdateWeatherTransition(true);
+        }
+
+        public int ApplyRainNowForTesting() => CurrentWeather == FarmWeather.Rain && plot != null ? plot.ApplyRainToTiles() : 0;
+
+        private void RefreshWeather(bool immediate)
+        {
+            if (state == null) return;
+            lastDay = state.DayNumber;
+            CurrentWeather = WeatherForDay(state.WorldSeed, state.DayNumber);
+            var lightMultiplier = CurrentWeather switch
+            {
+                FarmWeather.Clear => 1f,
+                FarmWeather.Cloudy => 0.92f,
+                FarmWeather.Rain => 0.84f,
+                _ => 1f
+            };
+            clock?.SetWeatherLightMultiplier(lightMultiplier);
+            if (immediate) rainBlend = CurrentWeather == FarmWeather.Rain ? 1f : 0f;
+            UpdateWeatherTransition(immediate);
+            plot?.NotifyClockCheckpoint();
+        }
+
+        private void UpdateWeatherTransition(bool immediate = false)
+        {
+            var target = CurrentWeather == FarmWeather.Rain ? 1f : 0f;
+            rainBlend = immediate ? target : Mathf.MoveTowards(rainBlend, target, transitionSpeed * FarmSessionTime.DeltaTime);
+            if (rainParticles == null) return;
+            var emission = rainParticles.emission;
+            emission.rateOverTime = 260f * rainBlend;
+            if (rainBlend > 0.01f)
+            {
+                if (!rainParticles.isPlaying) rainParticles.Play();
+            }
+            else if (rainParticles.isPlaying)
+            {
+                rainParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            }
+        }
+
+        private void CreateRainEffect()
+        {
+            var rainObject = new GameObject("Farm_Rain_Effect");
+            rainObject.transform.SetParent(transform, true);
+            rainParticles = rainObject.AddComponent<ParticleSystem>();
+            var main = rainParticles.main;
+            main.loop = true;
+            main.startLifetime = 1f;
+            main.startSpeed = 0f;
+            main.startSize = 0.018f;
+            main.startColor = new Color(0.82f, 0.88f, 0.94f, 0.28f);
+            main.maxParticles = 500;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var emission = rainParticles.emission;
+            emission.rateOverTime = 0f;
+            var shape = rainParticles.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = new Vector3(24f, 0.2f, 24f);
+            var velocity = rainParticles.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World;
+            velocity.y = -13f;
+            var renderer = rainObject.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.Stretch;
+            renderer.velocityScale = 0.04f;
+            renderer.lengthScale = 0.8f;
+            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
+            if (shader == null) shader = Shader.Find("Sprites/Default");
+            if (shader != null)
+            {
+                var rainColor = new Color(0.82f, 0.88f, 0.94f, 0.28f);
+                rainMaterial = new Material(shader) { color = rainColor };
+                if (rainMaterial.HasProperty("_BaseColor")) rainMaterial.SetColor("_BaseColor", rainColor);
+                if (rainMaterial.HasProperty("_Color")) rainMaterial.SetColor("_Color", rainColor);
+                renderer.material = rainMaterial;
+            }
+            rainParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        private void OnDestroy()
+        {
+            clock?.SetWeatherLightMultiplier(1f);
+            if (rainMaterial != null) Destroy(rainMaterial);
+        }
+
+        public static FarmWeather WeatherForDay(int worldSeed, int day)
+        {
+            unchecked
+            {
+                var hash = (uint)(worldSeed == 0 ? FarmGameState.DefaultWorldSeed : worldSeed);
+                hash ^= (uint)Mathf.Max(1, day) * 747796405u;
+                hash ^= hash >> 16;
+                hash *= 2246822519u;
+                hash ^= hash >> 13;
+                var roll = hash % 100u;
+                if (roll < 20u) return FarmWeather.Rain;
+                if (roll < 45u) return FarmWeather.Cloudy;
+                return FarmWeather.Clear;
+            }
+        }
+
+        public static string WeatherName(FarmWeather weather) => weather switch
+        {
+            FarmWeather.Clear => FarmLocalization.Get("weather.clear", "Sunny"),
+            FarmWeather.Cloudy => FarmLocalization.Get("weather.cloudy", "Cloudy"),
+            FarmWeather.Rain => FarmLocalization.Get("weather.rain", "Rain"),
+            _ => FarmLocalization.Get("weather.stable", "Stable weather")
+        };
+    }
+}

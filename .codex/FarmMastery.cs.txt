@@ -1,0 +1,269 @@
+using System;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+namespace FarmPrototype.Farming
+{
+    public enum FarmMasterySkill
+    {
+        Cultivation,
+        Harvesting,
+        Commerce
+    }
+
+    [Serializable]
+    public sealed class FarmMasteryProgress
+    {
+        public int CultivationExperience;
+        public int HarvestingExperience;
+        public int CommerceExperience;
+        public int FreeCultivationDay;
+
+        public int GetExperience(FarmMasterySkill skill) => skill switch
+        {
+            FarmMasterySkill.Cultivation => CultivationExperience,
+            FarmMasterySkill.Harvesting => HarvestingExperience,
+            FarmMasterySkill.Commerce => CommerceExperience,
+            _ => 0
+        };
+
+        public void AddExperience(FarmMasterySkill skill, int amount)
+        {
+            amount = Mathf.Max(0, amount);
+            if (skill == FarmMasterySkill.Cultivation) CultivationExperience += amount;
+            else if (skill == FarmMasterySkill.Harvesting) HarvestingExperience += amount;
+            else if (skill == FarmMasterySkill.Commerce) CommerceExperience += amount;
+        }
+
+        public FarmMasteryProgress Clone() => new()
+        {
+            CultivationExperience = CultivationExperience,
+            HarvestingExperience = HarvestingExperience,
+            CommerceExperience = CommerceExperience,
+            FreeCultivationDay = FreeCultivationDay
+        };
+    }
+
+    public static class FarmMasteryRules
+    {
+        public const int LevelTwoExperience = 12;
+        public const int LevelThreeExperience = 36;
+        public const float SkilledMagnetDistance = 4f;
+
+        public static int LevelForExperience(int experience) =>
+            experience >= LevelThreeExperience ? 3 : experience >= LevelTwoExperience ? 2 : 1;
+
+        public static int NextThreshold(int level) => level switch
+        {
+            1 => LevelTwoExperience,
+            2 => LevelThreeExperience,
+            _ => LevelThreeExperience
+        };
+
+        public static string DisplayName(FarmMasterySkill skill) => skill switch
+        {
+            FarmMasterySkill.Cultivation => "CULTIVO",
+            FarmMasterySkill.Harvesting => "COLHEITA",
+            FarmMasterySkill.Commerce => "COM\u00C9RCIO",
+            _ => skill.ToString().ToUpperInvariant()
+        };
+
+        public static string Description(FarmMasterySkill skill) => skill switch
+        {
+            FarmMasterySkill.Cultivation => "Preparar, plantar e regar canteiros.",
+            FarmMasterySkill.Harvesting => "Colher culturas e encontrar itens no mundo.",
+            FarmMasterySkill.Commerce => "Vender, comprar sementes e entregar pedidos.",
+            _ => string.Empty
+        };
+
+        public static string LevelTwoPerk(FarmMasterySkill skill) => skill switch
+        {
+            FarmMasterySkill.Cultivation => "PRIMEIRO F\u00D4LEGO: a primeira a\u00E7\u00E3o de cultivo do dia n\u00E3o gasta energia.",
+            FarmMasterySkill.Harvesting => "OLHAR ATENTO: itens no mundo s\u00E3o atra\u00EDdos a 4 unidades.",
+            FarmMasterySkill.Commerce => "AGENDA LOCAL: o quadro revela as culturas pedidas amanh\u00E3.",
+            _ => string.Empty
+        };
+
+        public static string LevelThreePerk(FarmMasterySkill skill) => skill switch
+        {
+            FarmMasterySkill.Cultivation => "CICLO CONT\u00CDNUO: colher replanta a mesma cultura quando houver semente.",
+            FarmMasterySkill.Harvesting => "CESTA DE APOIO: colheitas sem espa\u00E7o seguem direto para o dep\u00F3sito.",
+            FarmMasterySkill.Commerce => "ESTOQUE CONECTADO: pedidos tamb\u00E9m usam produtos guardados no dep\u00F3sito.",
+            _ => string.Empty
+        };
+    }
+
+    public sealed class FarmMasteryMenu : MonoBehaviour
+    {
+        private static readonly Color PanelColor = new(0.055f, 0.075f, 0.05f, 0.97f);
+        private static readonly Color AccentColor = new(0.95f, 0.67f, 0.18f, 1f);
+        private static readonly FarmMasterySkill[] Skills =
+        {
+            FarmMasterySkill.Cultivation,
+            FarmMasterySkill.Harvesting,
+            FarmMasterySkill.Commerce
+        };
+
+        private FarmHudController hud;
+        private FarmGameState state;
+        private Font font;
+        private GameObject window;
+        private CanvasGroup group;
+        private readonly Text[] cardTexts = new Text[3];
+        private bool open;
+
+        public bool IsOpen => open;
+        public string CardText(int index) => index >= 0 && index < cardTexts.Length && cardTexts[index] != null ? cardTexts[index].text : string.Empty;
+
+        public void Initialize(FarmHudController owner, FarmGameState gameState)
+        {
+            if (window != null) return;
+            hud = owner;
+            state = gameState;
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var canvas = hud != null ? hud.GetComponentInChildren<Canvas>() : null;
+            if (canvas == null) throw new InvalidOperationException("Canvas da fazenda ausente para o dom\u00EDnio.");
+            CreateLauncher(canvas.transform);
+            CreateWindow(canvas.transform);
+            SetOpen(false);
+        }
+
+        private void Update()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+            if (keyboard.kKey.wasPressedThisFrame) SetOpen(!open);
+            else if (open && keyboard.escapeKey.wasPressedThisFrame) SetOpen(false);
+            if (!open) return;
+            if (hud.IsInventoryOpen || hud.IsStorageOpen || hud.IsJournalOpen || hud.IsSleepConfirmationOpen || hud.IsDailyOrdersOpen || hud.IsSettingsOpen)
+            {
+                SetOpen(false);
+                return;
+            }
+            Refresh();
+        }
+
+        private void OnDisable()
+        {
+            if (hud != null) hud.SetMasteryOpen(false);
+        }
+
+        public void SetOpen(bool value)
+        {
+            if (hud == null || group == null) return;
+            if (value)
+            {
+                hud.SetInventoryOpen(false);
+                hud.SetStorageOpen(false);
+                hud.SetJournalOpen(false);
+                hud.SetSleepConfirmationOpen(false);
+                hud.SetDailyOrdersOpen(false);
+            }
+            open = value;
+            group.alpha = value ? 1f : 0f;
+            group.interactable = value;
+            group.blocksRaycasts = value;
+            hud.SetMasteryOpen(value);
+            if (value)
+            {
+                Refresh();
+                window.transform.SetAsLastSibling();
+            }
+        }
+
+        private void Refresh()
+        {
+            if (state == null) return;
+            for (var index = 0; index < Skills.Length; index++)
+            {
+                var skill = Skills[index];
+                var experience = state.GetMasteryExperience(skill);
+                var level = state.GetMasteryLevel(skill);
+                var progress = level >= 3 ? "DOM\u00CDNIO M\u00C1XIMO" : $"{experience}/{FarmMasteryRules.NextThreshold(level)} XP";
+                var levelTwo = level >= 2 ? "\u2713" : "\u2022";
+                var levelThree = level >= 3 ? "\u2713" : "\u2022";
+                cardTexts[index].text =
+                    $"{FarmMasteryRules.DisplayName(skill)}  \u2022  N\u00CDVEL {level}\n" +
+                    $"{FarmMasteryRules.Description(skill)}  {progress}\n\n" +
+                    $"{levelTwo} N2  {FarmMasteryRules.LevelTwoPerk(skill)}\n" +
+                    $"{levelThree} N3  {FarmMasteryRules.LevelThreePerk(skill)}";
+            }
+        }
+
+        private void CreateLauncher(Transform root)
+        {
+            var button = CreateButton("OpenMastery", root, "DOM\u00CDNIO  [K]", new Vector2(1f, 1f), new Vector2(-18f, -334f), new Vector2(210f, 44f), new Vector2(1f, 1f));
+            button.onClick.AddListener(() => SetOpen(true));
+        }
+
+        private void CreateWindow(Transform root)
+        {
+            window = CreatePanel("MasteryWindow", root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Vector2.zero, new Color(0.01f, 0.02f, 0.015f, 0.80f));
+            var backdrop = window.GetComponent<RectTransform>();
+            backdrop.offsetMin = Vector2.zero;
+            backdrop.offsetMax = Vector2.zero;
+            group = window.AddComponent<CanvasGroup>();
+            var panel = CreatePanel("MasteryPanel", window.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120f, 720f), new Vector2(0.5f, 0.5f), PanelColor);
+            CreateText("Title", panel.transform, "DOM\u00CDNIO DA FAZENDA", 30, FontStyle.Bold, AccentColor, new Vector2(30f, -22f), new Vector2(700f, 42f));
+            CreateText("Subtitle", panel.transform, "A pr\u00E1tica desbloqueia novas formas de trabalhar, sem substituir suas escolhas.", 16, FontStyle.Normal, new Color(0.78f, 0.84f, 0.74f), new Vector2(30f, -66f), new Vector2(850f, 28f));
+            var close = CreateButton("CloseMastery", panel.transform, "FECHAR  [K]", new Vector2(1f, 1f), new Vector2(-28f, -24f), new Vector2(160f, 44f), new Vector2(1f, 1f));
+            close.onClick.AddListener(() => SetOpen(false));
+            for (var index = 0; index < Skills.Length; index++)
+            {
+                var card = CreatePanel($"MasteryCard_{index + 1}", panel.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(30f, -118f - (index * 184f)), new Vector2(1060f, 166f), new Vector2(0f, 1f), new Color(0.11f, 0.14f, 0.09f, 1f));
+                cardTexts[index] = CreateText("Text", card.transform, string.Empty, 16, FontStyle.Normal, Color.white, new Vector2(22f, -14f), new Vector2(1016f, 140f));
+            }
+            SetOpen(false);
+        }
+
+        private GameObject CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2 pivot, Color color)
+        {
+            var panel = new GameObject(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            var rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            panel.GetComponent<Image>().color = color;
+            return panel;
+        }
+
+        private Text CreateText(string name, Transform parent, string content, int size, FontStyle style, Color color, Vector2 position, Vector2 dimensions)
+        {
+            var item = new GameObject(name, typeof(RectTransform), typeof(Text));
+            item.transform.SetParent(parent, false);
+            var rect = item.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = dimensions;
+            var text = item.GetComponent<Text>();
+            text.font = font;
+            text.text = content;
+            text.fontSize = size;
+            text.fontStyle = style;
+            text.color = color;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            return text;
+        }
+
+        private Button CreateButton(string name, Transform parent, string label, Vector2 anchor, Vector2 position, Vector2 size, Vector2 pivot)
+        {
+            var item = CreatePanel(name, parent, anchor, anchor, position, size, pivot, new Color(0.18f, 0.23f, 0.14f, 1f));
+            var button = item.AddComponent<Button>();
+            var text = CreateText("Label", item.transform, label, 16, FontStyle.Bold, Color.white, Vector2.zero, size);
+            text.alignment = TextAnchor.MiddleCenter;
+            text.rectTransform.anchorMin = Vector2.zero;
+            text.rectTransform.anchorMax = Vector2.one;
+            text.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            text.rectTransform.offsetMin = Vector2.zero;
+            text.rectTransform.offsetMax = Vector2.zero;
+            return button;
+        }
+    }
+}

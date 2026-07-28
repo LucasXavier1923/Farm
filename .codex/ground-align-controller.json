@@ -1,0 +1,15 @@
+{
+  "csharpCode": "var controller = player.GetComponent<CharacterController>(); var renderers = player.GetComponentsInChildren<Renderer>(); var visualMin = float.PositiveInfinity; foreach (var renderer in renderers) if (renderer.gameObject.activeInHierarchy) visualMin = Mathf.Min(visualMin, renderer.bounds.min.y); var hits = Physics.RaycastAll(player.transform.position + Vector3.up * 1000f, Vector3.down, 2000f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore); RaycastHit groundHit = new RaycastHit(); var foundGround = false; foreach (var hit in hits) { if (!hit.collider.transform.IsChildOf(player.transform)) { groundHit = hit; foundGround = true; break; } } if (!foundGround) throw new System.Exception(\"Ground was not found below player.\"); var visualOffset = visualMin - player.transform.position.y; var desiredPlayerY = groundHit.point.y - visualOffset; player.transform.position = new Vector3(player.transform.position.x, desiredPlayerY, player.transform.position.z); controller.center = new Vector3(controller.center.x, (controller.height * 0.5f) - (desiredPlayerY - groundHit.point.y), controller.center.z); EditorUtility.SetDirty(player); UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(player.scene); Debug.Log(\"[GroundFix] playerY=\" + desiredPlayerY + \" controllerCenterY=\" + controller.center.y + \" visualFeetTarget=\" + groundHit.point.y);",
+  "className": "AlignPlayerFeetAndCollider",
+  "methodName": "Execute",
+  "parameters": [
+    {
+      "typeName": "UnityEngine.GameObject",
+      "name": "player",
+      "value": {
+        "path": "Player"
+      }
+    }
+  ],
+  "isMethodBody": true
+}

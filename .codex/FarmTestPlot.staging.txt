@@ -1,0 +1,563 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+namespace FarmPrototype.Farming
+{
+    public enum FarmTool { Hoe, Seeds, WateringCan, Harvest }
+
+    public sealed class FarmTestPlot : MonoBehaviour
+    {
+        [SerializeField] private string playerName = "Player";
+        [SerializeField] private int gridSize = 3;
+        [SerializeField] private float tileSize = 2f;
+        [SerializeField] private float plotDistanceFromPlayer = 7f;
+        [SerializeField] private float interactionDistance = 7f;
+
+        private readonly List<FarmTestTile> tiles = new();
+        private Transform player;
+        private FarmGameState gameState;
+        private FarmSellStation sellStation;
+        private FarmTestTile hoveredTile;
+        private FarmSellStation hoveredStation;
+        private FarmTool activeTool;
+        private string feedback = "Prepare a terra, plante, regue e colha.";
+        private string saveStatus = "Save ainda não criado";
+        private bool saveQueued;
+        private float saveAt;
+
+        private void Start()
+        {
+            var playerObject = GameObject.Find(playerName);
+            player = playerObject != null ? playerObject.transform : null;
+            gameState = GetComponent<FarmGameState>();
+            if (gameState == null) gameState = gameObject.AddComponent<FarmGameState>();
+            gameState.Changed += QueueSave;
+            CreatePlotAndStation();
+            LoadGame(false);
+        }
+
+        private void OnDestroy()
+        {
+            if (gameState != null) gameState.Changed -= QueueSave;
+        }
+
+        private void OnApplicationQuit()
+        {
+            if (gameState != null && tiles.Count > 0) SaveGame(false);
+        }
+
+        private void Update()
+        {
+            UpdateToolSelection();
+            UpdateHoveredTarget();
+
+            var keyboard = Keyboard.current;
+            if (keyboard != null)
+            {
+                if (keyboard.f5Key.wasPressedThisFrame) SaveGame(true);
+                if (keyboard.f9Key.wasPressedThisFrame) LoadGame(true);
+                if (keyboard.eKey.wasPressedThisFrame && hoveredStation != null) InteractWithStation(false);
+                if (keyboard.bKey.wasPressedThisFrame && hoveredStation != null) InteractWithStation(true);
+            }
+
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) TryPrimaryInteraction();
+            if (saveQueued && Time.unscaledTime >= saveAt) SaveGame(false);
+        }
+
+        private void UpdateToolSelection()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+            if (keyboard.digit1Key.wasPressedThisFrame) activeTool = FarmTool.Hoe;
+            if (keyboard.digit2Key.wasPressedThisFrame) activeTool = FarmTool.Seeds;
+            if (keyboard.digit3Key.wasPressedThisFrame) activeTool = FarmTool.WateringCan;
+            if (keyboard.digit4Key.wasPressedThisFrame) activeTool = FarmTool.Harvest;
+        }
+
+        private void CreatePlotAndStation()
+        {
+            if (player == null)
+            {
+                feedback = "Player não encontrado.";
+                return;
+            }
+
+            var forward = Camera.main != null ? Camera.main.transform.forward : player.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 0.01f) forward = Vector3.forward;
+            forward.Normalize();
+
+            var center = player.position + (forward * plotDistanceFromPlayer);
+            center = PlaceOnGround(center);
+            var root = new GameObject("Farm_Test_Grid").transform;
+            root.SetParent(transform, true);
+            var offset = (gridSize - 1) * tileSize * 0.5f;
+            var index = 0;
+            for (var x = 0; x < gridSize; x++)
+            {
+                for (var z = 0; z < gridSize; z++)
+                {
+                    var tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    tile.name = $"Farm_Tile_{x}_{z}";
+                    tile.transform.SetParent(root, true);
+                    tile.transform.position = center + new Vector3((x * tileSize) - offset, 0.09f, (z * tileSize) - offset);
+                    tile.transform.localScale = new Vector3(tileSize - 0.12f, 0.18f, tileSize - 0.12f);
+                    var farmTile = tile.AddComponent<FarmTestTile>();
+                    farmTile.Initialize(this, index++, CropCatalog.Pumpkin);
+                    tiles.Add(farmTile);
+                }
+            }
+
+            CreateSellStation(center, forward, offset);
+            feedback = "Canteiro pronto. O plantio agora usa o inventário.";
+        }
+
+        private void CreateSellStation(Vector3 plotCenter, Vector3 forward, float gridOffset)
+        {
+            var cratePrefab = Resources.Load<GameObject>("FarmProps/SellCrate");
+            GameObject stationObject;
+            if (cratePrefab != null)
+            {
+                stationObject = Instantiate(cratePrefab);
+            }
+            else
+            {
+                stationObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                stationObject.transform.localScale = new Vector3(1.5f, 1f, 1.5f);
+                Debug.LogWarning("SellCrate não encontrado; usando marcador temporário.");
+            }
+
+            stationObject.name = "Farm_Sell_Station";
+            stationObject.transform.SetParent(transform, true);
+            var right = Vector3.Cross(Vector3.up, forward).normalized;
+            stationObject.transform.position = PlaceOnGround(plotCenter + (right * (gridOffset + 3.5f)));
+            stationObject.transform.rotation = Quaternion.LookRotation(-right, Vector3.up);
+            if (stationObject.GetComponentInChildren<Collider>() == null) stationObject.AddComponent<BoxCollider>();
+            sellStation = stationObject.AddComponent<FarmSellStation>();
+            sellStation.Initialize();
+        }
+
+        private static Vector3 PlaceOnGround(Vector3 position)
+        {
+            if (Physics.Raycast(position + (Vector3.up * 50f), Vector3.down, out var hit, 100f, ~0, QueryTriggerInteraction.Ignore))
+                position.y = hit.point.y;
+            return position;
+        }
+
+        private void UpdateHoveredTarget()
+        {
+            SetHoveredTile(null);
+            SetHoveredStation(null);
+            if (Camera.main == null || Mouse.current == null) return;
+
+            var ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            var hits = Physics.RaycastAll(ray, 250f, ~0, QueryTriggerInteraction.Ignore);
+            Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
+            foreach (var hit in hits)
+            {
+                var tile = hit.collider.GetComponentInParent<FarmTestTile>();
+                if (tile != null)
+                {
+                    SetHoveredTile(tile);
+                    return;
+                }
+
+                var station = hit.collider.GetComponentInParent<FarmSellStation>();
+                if (station != null)
+                {
+                    SetHoveredStation(station);
+                    return;
+                }
+            }
+        }
+
+        private void SetHoveredTile(FarmTestTile tile)
+        {
+            if (hoveredTile == tile) return;
+            if (hoveredTile != null) hoveredTile.SetHovered(false);
+            hoveredTile = tile;
+            if (hoveredTile != null) hoveredTile.SetHovered(true);
+        }
+
+        private void SetHoveredStation(FarmSellStation station)
+        {
+            if (hoveredStation == station) return;
+            if (hoveredStation != null) hoveredStation.SetHovered(false);
+            hoveredStation = station;
+            if (hoveredStation != null) hoveredStation.SetHovered(true);
+        }
+
+        private bool IsInRange(Vector3 targetPosition) =>
+            player != null && Vector3.Distance(player.position, targetPosition) <= interactionDistance;
+
+        private void TryPrimaryInteraction()
+        {
+            if (hoveredTile != null)
+            {
+                if (!IsInRange(hoveredTile.transform.position))
+                {
+                    feedback = "Chegue mais perto do canteiro.";
+                    return;
+                }
+
+                feedback = hoveredTile.Use(activeTool, gameState);
+                return;
+            }
+
+            if (hoveredStation != null) InteractWithStation(false);
+        }
+
+        private void InteractWithStation(bool buySeeds)
+        {
+            if (sellStation == null || !IsInRange(sellStation.transform.position))
+            {
+                feedback = "Chegue mais perto do caixote de vendas.";
+                return;
+            }
+
+            if (buySeeds)
+            {
+                if (gameState.TryBuyPumpkinSeedPack(out var amount, out var cost))
+                    feedback = $"Comprou {amount} sementes por ${cost}.";
+                else
+                    feedback = $"Dinheiro insuficiente. O pacote custa ${CropCatalog.Pumpkin.SeedPackPrice}.";
+            }
+            else
+            {
+                if (gameState.TrySellAllPumpkins(out var quantity, out var earned))
+                    feedback = $"Vendeu {quantity} abóboras por ${earned}.";
+                else
+                    feedback = "Não há abóboras no inventário para vender.";
+            }
+        }
+
+        public void NotifyTileChanged()
+        {
+            QueueSave();
+        }
+
+        private void QueueSave()
+        {
+            saveQueued = true;
+            saveAt = Time.unscaledTime + 0.35f;
+        }
+
+        private List<FarmTileSaveData> CaptureTiles()
+        {
+            var result = new List<FarmTileSaveData>(tiles.Count);
+            foreach (var tile in tiles) result.Add(tile.CaptureSaveData());
+            return result;
+        }
+
+        private void SaveGame(bool showFeedback)
+        {
+            saveQueued = false;
+            var data = gameState.CreateSaveData(CaptureTiles());
+            if (FarmSaveSystem.Save(data, out var error))
+            {
+                saveStatus = $"Salvo às {DateTime.Now:HH:mm:ss}";
+                if (showFeedback) feedback = "Jogo salvo.";
+            }
+            else
+            {
+                saveStatus = "Falha ao salvar";
+                feedback = $"Erro ao salvar: {error}";
+                Debug.LogError($"Falha ao salvar a fazenda: {error}");
+            }
+        }
+
+        private void LoadGame(bool showFeedback)
+        {
+            if (!FarmSaveSystem.TryLoad(out var data, out var error))
+            {
+                if (!string.IsNullOrEmpty(error))
+                {
+                    feedback = $"Erro ao carregar: {error}";
+                    Debug.LogError($"Falha ao carregar a fazenda: {error}");
+                }
+                else if (showFeedback)
+                {
+                    feedback = "Nenhum save encontrado.";
+                }
+                return;
+            }
+
+            gameState.Restore(data);
+            if (data.Tiles != null)
+            {
+                foreach (var tileData in data.Tiles)
+                {
+                    if (tileData.Index >= 0 && tileData.Index < tiles.Count) tiles[tileData.Index].Restore(tileData);
+                }
+            }
+            saveQueued = false;
+            saveStatus = "Save carregado";
+            if (showFeedback) feedback = "Jogo carregado.";
+        }
+
+        private string HoverPrompt()
+        {
+            if (hoveredTile != null)
+            {
+                var range = IsInRange(hoveredTile.transform.position) ? "" : " (fora de alcance)";
+                return $"Alvo: {hoveredTile.StatusText}{range}";
+            }
+            if (hoveredStation != null)
+            {
+                var range = IsInRange(hoveredStation.transform.position) ? "" : " (fora de alcance)";
+                return $"Caixote: clique/E vende tudo • B compra sementes{range}";
+            }
+            return "Passe o mouse sobre um canteiro ou o caixote.";
+        }
+
+        private void OnGUI()
+        {
+            GUI.Box(new Rect(18f, 18f, 540f, 188f), "Fazenda — ciclo jogável");
+            if (gameState == null) return;
+            GUI.Label(new Rect(32f, 48f, 510f, 22f),
+                $"${gameState.Money}   |   Sementes: {gameState.PumpkinSeeds}   |   Abóboras: {gameState.Pumpkins}");
+            GUI.Label(new Rect(32f, 72f, 510f, 22f), $"Ferramenta: {ToolName(activeTool)}");
+            GUI.Label(new Rect(32f, 96f, 510f, 22f), "1 Enxada • 2 Sementes • 3 Regador • 4 Colher");
+            GUI.Label(new Rect(32f, 120f, 510f, 22f), HoverPrompt());
+            GUI.Label(new Rect(32f, 144f, 510f, 22f), feedback);
+            GUI.Label(new Rect(32f, 168f, 510f, 22f), $"F5 salvar • F9 carregar   |   {saveStatus}");
+
+            if (sellStation != null && Camera.main != null)
+            {
+                var screen = Camera.main.WorldToScreenPoint(sellStation.transform.position + (Vector3.up * 2f));
+                if (screen.z > 0f)
+                    GUI.Box(new Rect(screen.x - 75f, Screen.height - screen.y - 18f, 150f, 26f), "VENDER / SEMENTES");
+            }
+        }
+
+        private static string ToolName(FarmTool tool) => tool switch
+        {
+            FarmTool.Hoe => "Enxada",
+            FarmTool.Seeds => "Sementes",
+            FarmTool.WateringCan => "Regador",
+            FarmTool.Harvest => "Colher",
+            _ => "-"
+        };
+    }
+
+    public sealed class FarmSellStation : MonoBehaviour
+    {
+        private Vector3 normalScale;
+
+        public void Initialize()
+        {
+            normalScale = transform.localScale;
+        }
+
+        public void SetHovered(bool hovered)
+        {
+            transform.localScale = normalScale * (hovered ? 1.08f : 1f);
+        }
+    }
+
+    public sealed class FarmTestTile : MonoBehaviour
+    {
+        private enum State { Untilled, Tilled, Seeded, Watered, Growing, Ready }
+
+        private static readonly Color UntilledColor = new(0.33f, 0.48f, 0.18f);
+        private static readonly Color TilledColor = new(0.28f, 0.13f, 0.05f);
+        private static readonly Color SeededColor = new(0.40f, 0.22f, 0.08f);
+        private static readonly Color WateredColor = new(0.12f, 0.25f, 0.18f);
+        private static readonly Color ReadyColor = new(0.22f, 0.42f, 0.10f);
+
+        private FarmTestPlot plot;
+        private CropDefinition cropDefinition;
+        private Renderer tileRenderer;
+        private Material tileMaterial;
+        private State state;
+        private int index;
+        private float middleAt;
+        private float readyAt;
+        private GameObject cropVisual;
+        private GameObject smallModel;
+        private GameObject mediumModel;
+        private GameObject largeModel;
+        private Color normalColor;
+        private bool hovered;
+
+        public string StatusText => state switch
+        {
+            State.Untilled => "terra não preparada",
+            State.Tilled => "terra preparada — plante",
+            State.Seeded => "semente plantada — regue",
+            State.Watered => $"regada — {SecondsRemaining:0}s",
+            State.Growing => $"crescendo — {SecondsRemaining:0}s",
+            State.Ready => $"{cropDefinition.DisplayName} pronta — colha",
+            _ => "canteiro"
+        };
+
+        private float SecondsRemaining => Mathf.Max(0f, readyAt - Time.time);
+
+        public void Initialize(FarmTestPlot owner, int tileIndex, CropDefinition definition)
+        {
+            plot = owner;
+            index = tileIndex;
+            cropDefinition = definition;
+            tileRenderer = GetComponent<Renderer>();
+            tileMaterial = tileRenderer.material;
+            smallModel = Resources.Load<GameObject>(definition.SmallModelResource);
+            mediumModel = Resources.Load<GameObject>(definition.MediumModelResource);
+            largeModel = Resources.Load<GameObject>(definition.LargeModelResource);
+            if (smallModel == null || mediumModel == null || largeModel == null)
+                Debug.LogError($"Modelos da cultura '{definition.Id}' não foram encontrados em Resources.");
+            RefreshVisual();
+        }
+
+        private void Update()
+        {
+            if (state == State.Watered && Time.time >= middleAt)
+            {
+                state = State.Growing;
+                RefreshVisual();
+                plot.NotifyTileChanged();
+            }
+            else if (state == State.Growing && Time.time >= readyAt)
+            {
+                state = State.Ready;
+                RefreshVisual();
+                plot.NotifyTileChanged();
+            }
+        }
+
+        public string Use(FarmTool tool, FarmGameState inventory)
+        {
+            if (tool == FarmTool.Hoe && state == State.Untilled)
+            {
+                state = State.Tilled;
+                RefreshVisual();
+                plot.NotifyTileChanged();
+                return "Terra preparada. Selecione sementes (2).";
+            }
+
+            if (tool == FarmTool.Seeds && state == State.Tilled)
+            {
+                if (!inventory.TryConsumePumpkinSeed()) return "Você não possui sementes. Compre no caixote.";
+                state = State.Seeded;
+                RefreshVisual();
+                plot.NotifyTileChanged();
+                return "Semente consumida e plantada. Agora regue (3).";
+            }
+
+            if (tool == FarmTool.WateringCan && state == State.Seeded)
+            {
+                state = State.Watered;
+                middleAt = Time.time + (cropDefinition.GrowthSeconds * 0.5f);
+                readyAt = Time.time + cropDefinition.GrowthSeconds;
+                RefreshVisual();
+                plot.NotifyTileChanged();
+                return $"Regada! Ficará pronta em {cropDefinition.GrowthSeconds:0} segundos.";
+            }
+
+            if (tool == FarmTool.Harvest && state == State.Ready)
+            {
+                state = State.Tilled;
+                inventory.AddPumpkins(cropDefinition.HarvestYield);
+                RefreshVisual();
+                plot.NotifyTileChanged();
+                return $"Colheu {cropDefinition.HarvestYield} {cropDefinition.DisplayName.ToLowerInvariant()}(s).";
+            }
+
+            return tool switch
+            {
+                FarmTool.Hoe => "Esse canteiro já foi preparado.",
+                FarmTool.Seeds => "Sementes só podem ser usadas em terra preparada.",
+                FarmTool.WateringCan => "Plante uma semente antes de regar.",
+                FarmTool.Harvest => "A cultura ainda não está pronta.",
+                _ => "Ação indisponível."
+            };
+        }
+
+        public FarmTileSaveData CaptureSaveData()
+        {
+            return new FarmTileSaveData
+            {
+                Index = index,
+                State = (int)state,
+                CropId = cropDefinition.Id,
+                GrowthSecondsRemaining = state is State.Watered or State.Growing ? SecondsRemaining : 0f
+            };
+        }
+
+        public void Restore(FarmTileSaveData data)
+        {
+            var maxState = Enum.GetValues(typeof(State)).Length - 1;
+            state = (State)Mathf.Clamp(data.State, 0, maxState);
+            if (state is State.Watered or State.Growing)
+            {
+                if (data.GrowthSecondsRemaining <= 0f)
+                {
+                    state = State.Ready;
+                }
+                else
+                {
+                    readyAt = Time.time + data.GrowthSecondsRemaining;
+                    var halfwayRemaining = cropDefinition.GrowthSeconds * 0.5f;
+                    if (data.GrowthSecondsRemaining > halfwayRemaining)
+                    {
+                        state = State.Watered;
+                        middleAt = Time.time + (data.GrowthSecondsRemaining - halfwayRemaining);
+                    }
+                    else
+                    {
+                        state = State.Growing;
+                        middleAt = Time.time;
+                    }
+                }
+            }
+            RefreshVisual();
+        }
+
+        public void SetHovered(bool value)
+        {
+            hovered = value;
+            ApplyTileColor();
+        }
+
+        private void RefreshVisual()
+        {
+            normalColor = state switch
+            {
+                State.Untilled => UntilledColor,
+                State.Tilled => TilledColor,
+                State.Seeded => SeededColor,
+                State.Watered => WateredColor,
+                State.Growing => WateredColor,
+                State.Ready => ReadyColor,
+                _ => UntilledColor
+            };
+            ApplyTileColor();
+
+            if (cropVisual != null) Destroy(cropVisual);
+            cropVisual = null;
+            var model = state switch
+            {
+                State.Seeded or State.Watered => smallModel,
+                State.Growing => mediumModel,
+                State.Ready => largeModel,
+                _ => null
+            };
+            if (model == null) return;
+
+            cropVisual = Instantiate(model);
+            cropVisual.name = $"{cropDefinition.Id}_{state}_{index}";
+            cropVisual.transform.position = transform.position + (Vector3.up * 0.18f);
+            cropVisual.transform.rotation = Quaternion.identity;
+            cropVisual.transform.localScale = Vector3.one * 0.75f;
+            cropVisual.transform.SetParent(transform, true);
+            foreach (var cropCollider in cropVisual.GetComponentsInChildren<Collider>()) Destroy(cropCollider);
+        }
+
+        private void ApplyTileColor()
+        {
+            if (tileMaterial == null) return;
+            tileMaterial.color = hovered ? Color.Lerp(normalColor, Color.white, 0.32f) : normalColor;
+        }
+    }
+}

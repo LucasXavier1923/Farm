@@ -1,0 +1,4 @@
+{
+  "csharpCode":"var plot=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>();var hud=UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmHudController>();if(plot==null||hud==null)throw new System.Exception(\"Modal ausente\");plot.DayClock.SetClockForTesting(1,600f);plot.DayClock.SetSimulationSpeed(1f);hud.SetJournalOpen(true);if(!hud.IsJournalOpen||!FarmPrototype.Farming.FarmHudController.IsModalOpen)throw new System.Exception(\"Diário não abriu como modal\");UnityEngine.PlayerPrefs.SetFloat(\"journal_modal_minute\",plot.GameState.MinutesOfDay);",
+  "className":"JournalModalStep1","methodName":"Run","parameters":[],"isMethodBody":true
+}

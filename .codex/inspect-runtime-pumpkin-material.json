@@ -1,0 +1,7 @@
+{
+  "csharpCode": "var crop = UnityEngine.GameObject.Find(\"Pumpkin_Ready\"); if (crop == null) throw new System.Exception(\"Pumpkin_Ready não encontrada em execução\"); foreach (var renderer in crop.GetComponentsInChildren<UnityEngine.Renderer>(true)) foreach (var material in renderer.sharedMaterials) { if (material == null) throw new System.Exception(\"Material ausente na Pumpkin_Ready\"); UnityEngine.Debug.Log(\"[ABOBORA_RUNTIME] Material=\" + material.name + \" | Shader=\" + (material.shader == null ? \"NULL\" : material.shader.name) + \" | Textura=\" + (material.mainTexture == null ? \"NULL\" : material.mainTexture.name)); }",
+  "className": "RuntimePumpkinMaterialInspection",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}

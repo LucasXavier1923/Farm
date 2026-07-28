@@ -1,0 +1,7 @@
+{
+  "csharpCode": "UnityEngine.Application.runInBackground = true; var plot = UnityEngine.Object.FindAnyObjectByType<FarmPrototype.Farming.FarmTestPlot>(); if (plot == null || plot.DayClock == null) throw new System.Exception(\"Relogio ausente\"); plot.DayClock.SetSimulationSpeed(0f); plot.DayClock.SetClockForTesting(2, 1140f);",
+  "className": "FarmDayClockDuskVisual",
+  "methodName": "Run",
+  "parameters": [],
+  "isMethodBody": true
+}
