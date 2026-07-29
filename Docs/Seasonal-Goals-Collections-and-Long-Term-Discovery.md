@@ -54,4 +54,4 @@ passed=True showedNext=True claimed=True milestone=8 persisted=True duplicateRej
 
 ## Deferred work
 
-Collections currently reward activity breadth. Future global market, contracts, and seasonal events can add non-exclusive collection tracks, but must retain the same host-authoritative claim boundary and avoid turning the book into a mandatory checklist.
+Collections reward activity breadth. Future local contracts and seasonal events can add non-exclusive collection tracks, while keeping claims in the shared host session and avoiding a mandatory checklist.

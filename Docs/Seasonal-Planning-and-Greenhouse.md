@@ -16,7 +16,7 @@
 It rejects an off-season `PlantSeedAsync` request before removing a seed. The
 callback resolves only against `FarmGameState.PlacedObjects` and
 `FarmBuildableDefinition` data: it does not depend on renderers, physics, or
-scene hierarchy. A future Steam host or Supabase function must make the same
+scene hierarchy. The host session makes the same
 query against its authoritative placement snapshot.
 
 Harvest resolves coverage again. Therefore reclaiming or moving the greenhouse

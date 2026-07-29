@@ -8,9 +8,16 @@ namespace FarmPrototype.Farming
         public const int VisitIntervalDays = 3;
         public const float GrowthDelaySeconds = 2f;
         public const float DefaultScarecrowRadius = 6.5f;
+        private static bool? developerVisitOverride;
+
+        public static bool HasDeveloperVisitOverride => developerVisitOverride.HasValue;
+        public static bool? DeveloperVisitOverride => developerVisitOverride;
 
         public static bool IsVisitDay(int day) =>
-            day >= FirstVisitDay && (day - FirstVisitDay) % VisitIntervalDays == 0;
+            developerVisitOverride ?? (day >= FirstVisitDay && (day - FirstVisitDay) % VisitIntervalDays == 0);
+
+        /// <summary>Overrides the normal pest calendar for local development runs.</summary>
+        public static void SetDeveloperVisitOverride(bool? enabled) => developerVisitOverride = enabled;
 
         public static string ForecastText(int day)
         {

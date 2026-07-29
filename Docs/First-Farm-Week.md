@@ -43,7 +43,7 @@ never prevented from farming, exploring, selling, or playing with friends.
 The First Farm Week intentionally uses the systems already present: four crop
 types, daily orders, market prices, world pickups, a workbench, recipes,
 building placement, plot expansion, tool upgrades, weather, crows, and morning
-automation. It does not add a global market or final economy assumptions.
+automation. It does not add player-to-player trade or final economy assumptions.
 
 The initial workbench area supplies 12 Wood and 8 Stone in total. That is
 enough for the intended Scarecrow (6 Wood, 2 Stone) followed by the Sprinkler

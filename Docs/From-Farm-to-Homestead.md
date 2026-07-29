@@ -50,7 +50,7 @@ fun in local testing.
 ### Not included
 
 - Steam networking, shared remote object replication, or lobby work.
-- Supabase or global economy work.
+- External services or player-to-player trading.
 - Dozens of furniture items, free-form interior simulation, or building
   destruction systems.
 - Additional animal species until the chicken loop is pleasant and useful.

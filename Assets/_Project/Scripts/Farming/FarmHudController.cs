@@ -712,6 +712,11 @@ namespace FarmPrototype.Farming
             BeginItemDrag(itemId, FarmItemQuality.Normal, false, screenPosition);
         }
 
+        public void BeginItemDrag(string itemId, FarmItemQuality quality, Vector2 screenPosition)
+        {
+            BeginItemDrag(itemId, quality, false, screenPosition);
+        }
+
         public void BeginStorageItemDrag(string itemId, FarmItemQuality quality, bool sourceIsStorage, Vector2 screenPosition)
         {
             BeginItemDrag(itemId, quality, sourceIsStorage, screenPosition);

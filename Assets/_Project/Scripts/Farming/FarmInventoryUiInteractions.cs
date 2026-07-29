@@ -22,7 +22,7 @@ namespace FarmPrototype.Farming
         {
             if (string.IsNullOrEmpty(itemId)) return;
             hud?.HideItemTooltip();
-            hud?.BeginItemDrag(itemId, eventData.position);
+            hud?.BeginItemDrag(itemId, quality, eventData.position);
         }
 
         public void OnDrag(PointerEventData eventData) => hud?.UpdateItemDrag(eventData.position);

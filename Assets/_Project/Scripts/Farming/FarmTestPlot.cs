@@ -17,7 +17,8 @@ namespace FarmPrototype.Farming
         [SerializeField] private float tileSize = 2f;
         [SerializeField] private float plotDistanceFromPlayer = 7f;
         [SerializeField] private float interactionDistance = 7f;
-        [SerializeField] private bool useAuthoritativeCore = true;
+        // Host-led co-op stores session state locally; no mock or remote backend is used.
+        [SerializeField] private bool useAuthoritativeCore = false;
         private const float SellStationInteractionDistance = 2.2f;
         private const float StorageInteractionDistance = 2.2f;
         private const float SleepInteractionDistance = 2.5f;
@@ -161,6 +162,9 @@ namespace FarmPrototype.Farming
 
         private void Start()
         {
+            // Existing prototype scenes serialized this flag as true. Force the new
+            // host-led local model even when opening an older scene revision.
+            useAuthoritativeCore = false;
             FarmEconomyRules.Reload();
             feedback = FarmLocalization.Get("feedback.core_loop", "Prepare the soil, plant, water, and harvest.");
             saveStatus = FarmLocalization.Get("save.not_created", "Save not created yet.");
@@ -204,6 +208,9 @@ namespace FarmPrototype.Farming
             hud = GetComponent<FarmHudController>();
             if (hud == null) hud = gameObject.AddComponent<FarmHudController>();
             hud.Initialize(this);
+            var developerPanel = GetComponent<FarmDeveloperPanel>();
+            if (developerPanel == null) developerPanel = gameObject.AddComponent<FarmDeveloperPanel>();
+            developerPanel.Initialize(this);
             collectionBook = GetComponent<FarmCollectionBook>();
             if (collectionBook == null) collectionBook = gameObject.AddComponent<FarmCollectionBook>();
             collectionBook.Initialize(gameState, hud);
@@ -1607,6 +1614,55 @@ namespace FarmPrototype.Farming
                 if (tile.ApplyRainWatering()) watered++;
             if (watered > 0) feedback = FarmLocalization.Format("weather.rain.watered", "Rain watered {0} plot tile(s).", watered);
             return watered;
+        }
+
+        /// <summary>Advances to the next morning and runs normal morning automation.</summary>
+        public void AdvanceDayForDebug()
+        {
+            if (dayClock == null || gameState == null) return;
+            dayClock.SetClock(gameState.DayNumber + 1, 360f);
+            NotifyMorningStarted();
+            feedback = FarmLocalization.Format("dev.day.skipped", "Developer: advanced to Day {0}.", gameState.DayNumber);
+            QueueSave();
+        }
+
+        public void SetSeasonForDebug(FarmSeason season)
+        {
+            if (dayClock == null || gameState == null) return;
+            var yearStart = ((gameState.DayNumber - 1) / FarmDayClock.DaysPerYear) * FarmDayClock.DaysPerYear + 1;
+            var targetDay = yearStart + ((int)season * FarmDayClock.DaysPerSeason) + (dayClock.DayOfSeason - 1);
+            dayClock.SetClock(targetDay, gameState.MinutesOfDay);
+            weatherSystem?.Refresh();
+            feedback = FarmLocalization.Format("dev.season.changed", "Developer: season set to {0}.", FarmDayClock.SeasonName(season));
+            QueueSave();
+        }
+
+        public int TriggerPestVisitForDebug()
+        {
+            lastMorningPestAffected = ApplyPestVisit(out lastMorningPestProtected);
+            feedback = FarmLocalization.Format("dev.pests.triggered", "Developer: pest visit tested. Affected {0}, protected {1}.", lastMorningPestAffected, lastMorningPestProtected);
+            QueueSave();
+            return lastMorningPestAffected;
+        }
+
+        public int WaterAllTilesForDebug()
+        {
+            var watered = 0;
+            foreach (var tile in tiles)
+                if (tile.ApplyRainWatering()) watered++;
+            feedback = FarmLocalization.Format("dev.tiles.watered", "Developer: watered {0} tile(s).", watered);
+            NotifyTileChanged();
+            return watered;
+        }
+
+        public int AdvanceCropGrowthForDebug(float realSeconds)
+        {
+            var advanced = 0;
+            foreach (var tile in tiles)
+                if (tile.AdvanceGrowth(realSeconds)) advanced++;
+            feedback = FarmLocalization.Format("dev.crops.advanced", "Developer: advanced {0} crop(s) by {1:0.#} seconds.", advanced, realSeconds);
+            NotifyTileChanged();
+            return advanced;
         }
         public void NotifyClockCheckpoint()
         {

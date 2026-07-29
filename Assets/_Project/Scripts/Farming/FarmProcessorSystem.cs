@@ -13,6 +13,8 @@ namespace FarmPrototype.Farming
         private Transform player;
         private Transform station;
 
+        public bool HasSelectedRecipe => ResolveSelectedRecipe() != null;
+
         public void Initialize(FarmTestPlot owner, FarmGameState gameState, FarmHudController ownerHud, Transform playerTransform)
         {
             if (plot != null) return;
@@ -28,6 +30,10 @@ namespace FarmPrototype.Farming
             var prompt = near ? BuildPrompt(recipe) : string.Empty;
             plot.SetExternalPrompt(this, prompt);
             if (!near || FarmHudController.IsModalOpen || Keyboard.current == null || !Keyboard.current.fKey.wasPressedThisFrame) return;
+            // The workbench also owns the crafting menu. A toggle press must never
+            // close/open that menu and queue production in the same frame.
+            if (plot.CraftingSystem != null && (plot.CraftingSystem.IsOpen || plot.CraftingSystem.ConsumedInteractionThisFrame)) return;
+            if (recipe == null) return;
             if (!FarmSessionTime.IsSimulationAuthority)
             {
                 FarmSessionIntentBus.Raise(FarmSessionIntentKind.Production, "Player", $"action=process;station=workbench;recipe={recipe?.Id ?? string.Empty}");

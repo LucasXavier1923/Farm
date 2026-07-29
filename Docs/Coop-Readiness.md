@@ -50,7 +50,7 @@ When networking begins, the adapter should:
 - packet serialization, reliability, compression, interpolation, and bandwidth
   tuning;
 - remote player transform/animation packets and avatar spawning;
-- authoritative backend, global market, authentication, and persistence.
+- external backend, global trade, authentication, and remote persistence.
 
 See [Coop-Session-Authority.md](Coop-Session-Authority.md) for the detailed
 authority rules and snapshot contract.

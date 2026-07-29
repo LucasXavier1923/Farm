@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Meta 5 creates a tunable local economy before any global market exists. The
+Meta 5 creates a tunable local economy for the hosted farm. The
 first-week vertical should let a player buy seeds, grow crops, sell produce,
 complete daily orders, and decide whether the next goal is a better tool, more
 land, or a production project.

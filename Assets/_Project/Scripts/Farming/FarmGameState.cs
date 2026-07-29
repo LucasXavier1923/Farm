@@ -676,6 +676,21 @@ namespace FarmPrototype.Farming
             return true;
         }
 
+        /// <summary>Development utility: grants local currency without a commerce action.</summary>
+        public void AddMoneyForDebug(int amount)
+        {
+            money = Mathf.Max(0, money + amount);
+            NotifyChanged();
+        }
+
+        /// <summary>Development utility: restores stamina for rapid mechanic testing.</summary>
+        public void RestoreEnergyForDebug()
+        {
+            energy = MaxEnergy;
+            lastEnergyActionWasFree = false;
+            NotifyChanged();
+        }
+
         public bool TryRemoveItem(string itemId, int amount)
         {
             if (amount <= 0) return true;

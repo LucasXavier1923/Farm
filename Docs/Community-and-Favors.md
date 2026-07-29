@@ -17,7 +17,7 @@ This follows a proven cozy-farm pattern: social requests create variety, acknowl
 
 ## Co-op and authority
 
-Favor belongs to the **farm**, not a local player. This matches shared deliveries and prevents client divergence while co-op is host-authoritative. Future personal friendships, romance, gifts, and character-specific scenes must instead live in the authenticated player profile at the Supabase authority boundary. The stable contact IDs (`elara`, `bram`, `niko`) are intentionally save-safe for that future split.
+Favor belongs to the **farm**, not a local player. This matches shared deliveries in the host-led co-op save. Future personal friendships, romance, gifts, and character-specific scenes can use stable player IDs in the local hosted session. The stable contact IDs (`elara`, `bram`, `niko`) remain save-safe for that future split.
 
 ## Content and localization boundary
 

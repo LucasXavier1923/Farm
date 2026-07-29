@@ -26,7 +26,7 @@ Favorite gifts are optional. A farm may specialize in gathering, tea, cooking, r
 - Pip values Wildflowers, linking forage and animal care.
 - Clover values Forest Mushrooms, creating a meaningful choice against stew and other forage uses.
 - Maple values Wildflower Tea after the coop expansion, linking recipes, expansion, and animal care.
-- Better eggs support the marketplace, animal orders, Farm Omelets, gifts, and future artisan processing.
+- Better eggs support local selling, animal orders, Farm Omelets, gifts, and artisan processing.
 
 ## Validation
 

@@ -10,7 +10,7 @@ fortalecer o core loop cooperativo antes de ampliar escopo de rede.
   testáveis e desacoplados o bastante para evoluírem sem retrabalho.
 - `IFarmBackend` e o mock existentes ficam preservados como experimento de
   arquitetura futura. Eles não bloqueiam nem substituem a meta cooperativa.
-- A evolução futura para Supabase, Steamworks e coop deve reaproveitar contratos
+- A evolução futura do co-op deve reaproveitar contratos
   de dados, mas será planejada depois que o loop local estiver sólido.
 
 Esta revisão mantém o protótipo visual 3D e define a compatibilidade com coop

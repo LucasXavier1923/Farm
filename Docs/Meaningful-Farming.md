@@ -22,7 +22,7 @@ The visual soil tint and the item tooltip communicate the active state without r
 2. The mock backend validates tile state, item category, inventory, idempotency, and readiness.
 3. Only a confirmed response changes the visual tile and applies its inventory snapshot.
 
-The future Supabase implementation can preserve this request/result contract. A client therefore cannot grant itself yield, quality, or inventory items locally.
+The host applies this request/result contract directly to the shared local save. Guests cannot alter the farm state without the host session processing the action.
 
 ## Save compatibility
 

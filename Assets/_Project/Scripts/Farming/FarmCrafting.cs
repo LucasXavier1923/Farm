@@ -38,6 +38,8 @@ namespace FarmPrototype.Farming
         private bool open;
 
         public bool IsOpen => open;
+        /// <summary>Prevents the processor sharing this station from reacting to the same F press.</summary>
+        public bool ConsumedInteractionThisFrame { get; private set; }
         public bool InRange => player != null && station != null && Vector3.Distance(player.position, station.transform.position) <= InteractionDistance;
         public FarmCraftingStation Station => station;
         public string RecipeText(int index) => index >= 0 && index < recipeTexts.Count ? recipeTexts[index].text : string.Empty;
@@ -61,6 +63,7 @@ namespace FarmPrototype.Farming
 
         private void Update()
         {
+            ConsumedInteractionThisFrame = false;
             if (station == null || hud == null) return;
             var near = InRange;
             station.SetHighlighted(near && !FarmHudController.IsModalOpen);
@@ -74,9 +77,21 @@ namespace FarmPrototype.Farming
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.fKey.wasPressedThisFrame)
             {
-                if (open) SetOpen(false);
-                else if (near) SetOpen(true);
-                else hud.ShowSystemToast(FarmLocalization.Get("crafting.too_far", "Move within 1 unit of the workbench."), true);
+                if (open)
+                {
+                    ConsumedInteractionThisFrame = true;
+                    SetOpen(false);
+                }
+                else if (!near)
+                {
+                    ConsumedInteractionThisFrame = true;
+                    hud.ShowSystemToast(FarmLocalization.Get("crafting.too_far", "Move within 1 unit of the workbench."), true);
+                }
+                else if (plot?.ProcessorSystem == null || !plot.ProcessorSystem.HasSelectedRecipe)
+                {
+                    ConsumedInteractionThisFrame = true;
+                    SetOpen(true);
+                }
             }
             if (open && keyboard != null && keyboard.escapeKey.wasPressedThisFrame) SetOpen(false);
 

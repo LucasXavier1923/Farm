@@ -18,11 +18,15 @@ namespace FarmPrototype.Farming
         private int lastDay = -1;
         private float rainBlend;
         private float nextRainWateringAt;
+        private bool hasDeveloperWeatherOverride;
+        private FarmWeather developerWeatherOverride;
 
         public FarmWeather CurrentWeather { get; private set; }
         public FarmWeather TomorrowWeather => state != null ? WeatherForDay(state.WorldSeed, state.DayNumber + 1) : FarmWeather.Clear;
         public float RainBlend => rainBlend;
         public bool IsRainEffectPlaying => rainParticles != null && rainParticles.isPlaying;
+        public bool HasDeveloperWeatherOverride => hasDeveloperWeatherOverride;
+        public FarmWeather DeveloperWeatherOverride => developerWeatherOverride;
         public string DisplayText => FarmLocalization.Format("weather.display", "{0}   \u2022   Tomorrow: {1}", WeatherName(CurrentWeather), WeatherName(TomorrowWeather));
 
         public void Initialize(FarmTestPlot owner, FarmGameState gameState, FarmDayClock dayClock, Transform playerTransform)
@@ -59,11 +63,25 @@ namespace FarmPrototype.Farming
 
         public int ApplyRainNowForTesting() => CurrentWeather == FarmWeather.Rain && plot != null ? plot.ApplyRainToTiles() : 0;
 
+        /// <summary>
+        /// Development-only callers may pin the current weather to exercise rain,
+        /// lighting and forecast-dependent mechanics without changing the world seed.
+        /// Pass <c>null</c> to resume deterministic daily weather.
+        /// </summary>
+        public void SetDeveloperWeatherOverride(FarmWeather? weather)
+        {
+            hasDeveloperWeatherOverride = weather.HasValue;
+            if (weather.HasValue) developerWeatherOverride = weather.Value;
+            Refresh();
+        }
+
         private void RefreshWeather(bool immediate)
         {
             if (state == null) return;
             lastDay = state.DayNumber;
-            CurrentWeather = WeatherForDay(state.WorldSeed, state.DayNumber);
+            CurrentWeather = hasDeveloperWeatherOverride
+                ? developerWeatherOverride
+                : WeatherForDay(state.WorldSeed, state.DayNumber);
             var lightMultiplier = CurrentWeather switch
             {
                 FarmWeather.Clear => 1f,
